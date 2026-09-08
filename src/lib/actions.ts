@@ -60,6 +60,33 @@ export function publicErrorMessage(message: string) {
   if (lower.includes("duplicate key") || lower.includes("unique")) {
     return "A category with that name already exists.";
   }
+  if (lower.includes("cannot remove or demote the last")) {
+    return "Promote another roommate to admin first.";
+  }
+  if (lower.includes("only household admins can update household")) {
+    return "Only household admins can change household settings.";
+  }
+  if (lower.includes("only household admins can rotate")) {
+    return "Only household admins can rotate the invite code.";
+  }
+  if (lower.includes("only household admins can change members")) {
+    return "Only household admins can change members.";
+  }
+  if (lower.includes("leave the household instead")) {
+    return "Use Leave household to remove yourself.";
+  }
+  if (lower.includes("member not found")) {
+    return "That roommate could not be found.";
+  }
+  if (lower.includes("household not found")) {
+    return "That household could not be found.";
+  }
+  if (lower.includes("household name is required")) {
+    return "Household name is required.";
+  }
+  if (lower.includes("currency must be")) {
+    return "Choose a supported currency.";
+  }
 
   return message;
 }

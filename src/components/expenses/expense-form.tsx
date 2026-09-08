@@ -70,6 +70,7 @@ export function ExpenseForm({
           avatarUrl: null,
           role: "member",
           joinedAt: expense?.expenseDate ?? recurring?.nextRunDate ?? new Date().toISOString(),
+          isActive: false,
         });
       }
     }

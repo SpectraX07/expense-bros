@@ -17,6 +17,7 @@ export type HouseholdMember = {
   avatarUrl: string | null;
   role: Enums<"member_role">;
   joinedAt: string;
+  isActive: boolean;
 };
 
 type MembershipQueryRow = {
@@ -35,6 +36,7 @@ type MemberQueryRow = {
   user_id: string;
   role: Enums<"member_role">;
   joined_at: string;
+  is_active: boolean;
   profiles: { full_name: string; avatar_url: string | null } | null;
 };
 
@@ -68,13 +70,22 @@ export async function getHouseholdMemberships(userId: string) {
   });
 }
 
-export async function getHouseholdMembers(householdId: string) {
+export async function getHouseholdMembers(
+  householdId: string,
+  options?: { includeInactive?: boolean },
+) {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("household_members")
-    .select("user_id, role, joined_at, profiles(full_name, avatar_url)")
-    .eq("household_id", householdId)
-    .eq("is_active", true)
+    .select("user_id, role, joined_at, is_active, profiles(full_name, avatar_url)")
+    .eq("household_id", householdId);
+
+  if (!options?.includeInactive) {
+    query = query.eq("is_active", true);
+  }
+
+  const { data, error } = await query
+    .order("is_active", { ascending: false })
     .order("joined_at", { ascending: true });
 
   if (error) {
@@ -87,6 +98,7 @@ export async function getHouseholdMembers(householdId: string) {
     avatarUrl: row.profiles?.avatar_url ?? null,
     role: row.role,
     joinedAt: row.joined_at,
+    isActive: row.is_active,
   })) satisfies HouseholdMember[];
 }
 

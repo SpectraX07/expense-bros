@@ -502,6 +502,34 @@ export type Database = {
         Args: { p_invite_code: string };
         Returns: string;
       };
+      update_household: {
+        Args: { p_household_id: string; p_name: string; p_currency: string };
+        Returns: Database["public"]["Tables"]["households"]["Row"];
+      };
+      rotate_invite_code: {
+        Args: { p_household_id: string };
+        Returns: string;
+      };
+      set_member_active: {
+        Args: {
+          p_household_id: string;
+          p_user_id: string;
+          p_is_active: boolean;
+        };
+        Returns: undefined;
+      };
+      set_member_role: {
+        Args: {
+          p_household_id: string;
+          p_user_id: string;
+          p_role: Database["public"]["Enums"]["member_role"];
+        };
+        Returns: undefined;
+      };
+      leave_household: {
+        Args: { p_household_id: string };
+        Returns: undefined;
+      };
       is_household_member: {
         Args: { p_household_id: string };
         Returns: boolean;

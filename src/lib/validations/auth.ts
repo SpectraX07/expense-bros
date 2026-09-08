@@ -45,6 +45,34 @@ export const switchHouseholdSchema = z.object({
   householdId: z.uuid("Choose a household"),
 });
 
+export const updateProfileSchema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .max(80, "Name is too long"),
+});
+
+export const updateHouseholdSettingsSchema = createHouseholdSchema.extend({
+  householdId: z.uuid("Choose a household"),
+});
+
+export const householdIdSchema = z.object({
+  householdId: z.uuid("Choose a household"),
+});
+
+export const memberTargetSchema = householdIdSchema.extend({
+  userId: z.uuid("Choose a roommate"),
+});
+
+export const setMemberActiveSchema = memberTargetSchema.extend({
+  isActive: z.boolean(),
+});
+
+export const setMemberRoleSchema = memberTargetSchema.extend({
+  role: z.enum(["admin", "member"]),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type MagicLinkInput = z.infer<typeof magicLinkSchema>;
