@@ -1,7 +1,48 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { INVITE_COOKIE } from "@/lib/constants";
 import type { Database } from "@/lib/supabase/database.types";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+
+function isPublicPath(pathname: string) {
+  return (
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/join" ||
+    pathname.startsWith("/join/") ||
+    pathname.startsWith("/auth/")
+  );
+}
+
+function copySessionCookies(from: NextResponse, to: NextResponse) {
+  from.cookies.getAll().forEach((cookie) => {
+    to.cookies.set(cookie);
+  });
+
+  from.headers.forEach((value, key) => {
+    const lower = key.toLowerCase();
+    if (
+      lower === "cache-control" ||
+      lower === "expires" ||
+      lower === "pragma"
+    ) {
+      to.headers.set(key, value);
+    }
+  });
+}
+
+function redirectWithSession(
+  request: NextRequest,
+  supabaseResponse: NextResponse,
+  pathname: string,
+) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  url.search = "";
+  const redirectResponse = NextResponse.redirect(url);
+  copySessionCookies(supabaseResponse, redirectResponse);
+  return redirectResponse;
+}
 
 export async function updateSession(request: NextRequest) {
   if (!isSupabaseConfigured()) {
@@ -35,9 +76,45 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // Refresh the session. Do not write logic between createServerClient and
-  // getClaims() or users can be logged out at random.
-  await supabase.auth.getClaims();
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims;
+  const { pathname } = request.nextUrl;
+  const inviteCode = request.nextUrl.searchParams.get("code");
+
+  if (pathname === "/join" && inviteCode) {
+    const compact = inviteCode.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (compact.length >= 6) {
+      supabaseResponse.cookies.set(INVITE_COOKIE, compact, {
+        path: "/",
+        sameSite: "lax",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7,
+      });
+    }
+  }
+
+  if (pathname === "/") {
+    return redirectWithSession(
+      request,
+      supabaseResponse,
+      user ? "/dashboard" : "/login",
+    );
+  }
+
+  if (!user && !isPublicPath(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "";
+    url.searchParams.set("next", pathname);
+    const redirectResponse = NextResponse.redirect(url);
+    copySessionCookies(supabaseResponse, redirectResponse);
+    return redirectResponse;
+  }
+
+  if (user && (pathname === "/login" || pathname === "/signup")) {
+    return redirectWithSession(request, supabaseResponse, "/dashboard");
+  }
 
   return supabaseResponse;
 }

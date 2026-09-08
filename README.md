@@ -68,22 +68,28 @@ npx supabase db reset
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The home page is a scaffold status check (no product UI yet). It should report that Supabase is connected once `.env.local` is set and migrations have been applied.
+Open [http://localhost:3000](http://localhost:3000). Unauthenticated visits go to **Sign in**. After login with no household, you land on onboarding (create or join).
+
+## Auth (Supabase dashboard)
+
+In **Authentication → URL configuration**, add:
+
+- Site URL: `http://localhost:3000`
+- Redirect URLs: `http://localhost:3000/auth/callback`
+
+Email/password and magic link both use `/auth/callback`. New users get a `profiles` row via a trigger on `auth.users`. After first login, create a household (you become admin, invite code is generated) or join with a code. Share `/join?code=YOURCODE` from Household settings.
+
+Household create/join uses RPCs (`create_household`, `join_household`) so invite-code lookups do not bypass RLS from the client.
 
 ## Project layout
 
-- `src/app` — Next.js App Router
+- `src/app` — Next.js App Router (`(auth)`, `(onboarding)`, `(app)`)
+- `src/components` — UI, auth forms, household forms, app shell
 - `src/lib/supabase/client.ts` — browser client (Client Components)
 - `src/lib/supabase/server.ts` — server client (Server Components, Server Actions, Route Handlers)
-- `src/lib/supabase/middleware.ts` — session refresh helper
-- `src/proxy.ts` — Next.js 16 request proxy (replaces `middleware.ts`); refreshes the Auth session on each request
+- `src/lib/supabase/middleware.ts` — session refresh and auth redirects
+- `src/proxy.ts` — Next.js 16 request proxy (replaces `middleware.ts`)
 - `supabase/migrations` — Postgres schema, indexes, triggers, RLS
-
-## Auth notes
-
-Email/password and magic link are enabled in a typical Supabase project. Phase 2 wires the sign-in UI. New users get a `profiles` row via a trigger on `auth.users`.
-
-Household create/join is exposed as RPCs (`create_household`, `join_household`) so invite-code lookups do not have to bypass RLS from the client.
 
 ## Regenerating database types
 
