@@ -24,6 +24,7 @@ export const saveExpenseSchema = z.object({
   splitType: splitTypeSchema,
   note: z.string().trim().max(500).optional().nullable(),
   splits: z.array(expenseSplitSchema).min(1),
+  next: z.string().optional(),
 });
 
 export const createCategorySchema = z.object({

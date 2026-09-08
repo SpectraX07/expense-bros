@@ -10,6 +10,7 @@ import {
   type ActionResult,
 } from "@/lib/actions";
 import { splitsAreValid } from "@/lib/splits";
+import { safeInternalPath } from "@/lib/http";
 import {
   createCategorySchema,
   deleteExpenseSchema,
@@ -70,7 +71,7 @@ export async function saveExpenseAction(input: unknown): Promise<ActionResult> {
   if (parsed.data.id) {
     revalidatePath(`/expenses/${parsed.data.id}/edit`);
   }
-  redirect("/history");
+  redirect(safeInternalPath(parsed.data.next, "/history"));
 }
 
 export async function deleteExpenseAction(input: unknown): Promise<ActionResult> {

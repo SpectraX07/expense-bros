@@ -42,6 +42,7 @@ export function ExpenseForm({
   categories,
   currentUserId,
   expense,
+  next,
 }: {
   householdId: string;
   currency: string;
@@ -49,6 +50,7 @@ export function ExpenseForm({
   categories: ExpenseCategory[];
   currentUserId: string;
   expense?: ExpenseRecord;
+  next?: string;
 }) {
   const people = useMemo(() => {
     const map = new Map(members.map((member) => [member.userId, member]));
@@ -157,6 +159,7 @@ export function ExpenseForm({
           shareAmount: split.shareAmount,
           isIncluded: split.included,
         })),
+        next,
       });
       if (!result.ok) {
         toast.error(result.error);

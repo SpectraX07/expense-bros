@@ -510,6 +510,24 @@ export type Database = {
         };
         Returns: string;
       };
+      dashboard_stats: {
+        Args: {
+          p_household_id: string;
+          p_year: number;
+          p_month: number;
+          p_trend_months?: number;
+        };
+        Returns: Json;
+      };
+      set_overall_budget: {
+        Args: {
+          p_household_id: string;
+          p_year: number;
+          p_month: number;
+          p_amount: number;
+        };
+        Returns: number;
+      };
     };
     Enums: {
       member_role: "admin" | "member";

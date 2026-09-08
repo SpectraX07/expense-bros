@@ -36,6 +36,12 @@ export function publicErrorMessage(message: string) {
   if (lower.includes("payer must be")) {
     return "Choose who paid from the current household.";
   }
+  if (lower.includes("only household admins can set")) {
+    return "Only household admins can set the budget.";
+  }
+  if (lower.includes("budget must be zero or more")) {
+    return "Budget must be zero or more.";
+  }
   if (lower.includes("duplicate key") || lower.includes("unique")) {
     return "A category with that name already exists.";
   }
