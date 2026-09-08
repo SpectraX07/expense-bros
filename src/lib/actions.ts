@@ -42,6 +42,12 @@ export function publicErrorMessage(message: string) {
   if (lower.includes("budget must be zero or more")) {
     return "Budget must be zero or more.";
   }
+  if (lower.includes("not a household member")) {
+    return "You are not in this household.";
+  }
+  if (lower.includes("year and month must both")) {
+    return "Pick a month or view all-time, not a mix of both.";
+  }
   if (lower.includes("duplicate key") || lower.includes("unique")) {
     return "A category with that name already exists.";
   }

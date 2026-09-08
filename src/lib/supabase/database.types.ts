@@ -528,6 +528,24 @@ export type Database = {
         };
         Returns: number;
       };
+      settlement_balances: {
+        Args: {
+          p_household_id: string;
+          p_year?: number | null;
+          p_month?: number | null;
+        };
+        Returns: {
+          user_id: string;
+          full_name: string;
+          avatar_url: string | null;
+          is_active: boolean;
+          paid: number;
+          fair_share: number;
+          settled_out: number;
+          settled_in: number;
+          net: number;
+        }[];
+      };
     };
     Enums: {
       member_role: "admin" | "member";
