@@ -30,5 +30,6 @@ export async function setOverallBudgetAction(input: unknown): Promise<ActionResu
   }
 
   revalidatePath("/dashboard");
+  revalidatePath("/household/budgets");
   return { ok: true, message: "Budget saved." };
 }

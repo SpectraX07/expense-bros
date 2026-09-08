@@ -48,9 +48,17 @@ export default async function HistoryPage({
           <h1 className="text-2xl font-semibold tracking-tight">History</h1>
           <p className="text-muted-foreground">Filter by month, category, or who paid.</p>
         </div>
-        <Link href="/expenses/new" className={cn(buttonVariants())}>
-          Add expense
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/api/export?year=${year}&month=${month}`}
+            className={cn(buttonVariants({ variant: "outline" }))}
+          >
+            Export CSV
+          </Link>
+          <Link href="/expenses/new" className={cn(buttonVariants())}>
+            Add expense
+          </Link>
+        </div>
       </div>
 
       <MonthSwitcher year={year} month={month} extra={extra} />

@@ -86,6 +86,14 @@ export default async function SettlementPage({
         <div className="flex flex-wrap items-center gap-2">
           <ScopeToggle allTime={allTime} year={year} month={month} />
           {allTime ? null : <MonthSwitcher year={year} month={month} />}
+          {allTime ? null : (
+            <Link
+              href={`/api/export?year=${year}&month=${month}`}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            >
+              Export CSV
+            </Link>
+          )}
         </div>
       </div>
 

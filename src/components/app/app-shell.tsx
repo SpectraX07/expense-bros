@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { HouseholdSwitcher } from "@/components/app/household-switcher";
+import { ThemeToggle } from "@/components/app/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/app/actions/auth";
@@ -80,6 +81,7 @@ export function AppShell({
           {user.email ? (
             <p className="truncate px-2.5 text-[11px] text-muted-foreground">{user.email}</p>
           ) : null}
+          <ThemeToggle />
           <form action={signOut}>
             <Button
               type="submit"
@@ -96,10 +98,13 @@ export function AppShell({
       <div className="md:pl-64">
         <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur md:hidden">
           <Brand size="sm" />
-          <HouseholdSwitcher
-            memberships={memberships}
-            currentHousehold={currentHousehold}
-          />
+          <div className="flex items-center gap-1">
+            <ThemeToggle compact />
+            <HouseholdSwitcher
+              memberships={memberships}
+              currentHousehold={currentHousehold}
+            />
+          </div>
         </header>
 
         <main className="px-4 pb-24 pt-6 md:px-8 md:pb-10 md:pt-8">{children}</main>

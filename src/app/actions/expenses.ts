@@ -26,6 +26,8 @@ function revalidateExpensePaths() {
   revalidatePath("/expenses/new");
   revalidatePath("/dashboard");
   revalidatePath("/household/categories");
+  revalidatePath("/household/recurring");
+  revalidatePath("/household/budgets");
 }
 
 export async function saveExpenseAction(input: unknown): Promise<ActionResult> {

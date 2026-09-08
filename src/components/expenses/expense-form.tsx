@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { CategoryPicker } from "@/components/expenses/category-picker";
 import { saveExpenseAction } from "@/app/actions/expenses";
+import { saveRecurringAction } from "@/app/actions/recurring";
 import { formatMoney, roundMoney, toMoneyNumber } from "@/lib/money";
 import {
   computeSplits,
@@ -27,6 +28,8 @@ import {
 } from "@/lib/splits";
 import type { HouseholdMember } from "@/lib/households";
 import type { ExpenseCategory, ExpenseRecord } from "@/lib/expenses";
+import type { RecurringRecord } from "@/lib/recurring";
+import type { Enums } from "@/lib/supabase/database.types";
 
 const SPLIT_OPTIONS: { value: SplitType; label: string }[] = [
   { value: "equal", label: "Equal" },
@@ -43,6 +46,8 @@ export function ExpenseForm({
   currentUserId,
   expense,
   next,
+  mode = "expense",
+  recurring,
 }: {
   householdId: string;
   currency: string;
@@ -51,48 +56,59 @@ export function ExpenseForm({
   currentUserId: string;
   expense?: ExpenseRecord;
   next?: string;
+  mode?: "expense" | "recurring";
+  recurring?: RecurringRecord;
 }) {
   const people = useMemo(() => {
+    const existingSplits = expense?.splits ?? recurring?.splits ?? [];
     const map = new Map(members.map((member) => [member.userId, member]));
-    for (const split of expense?.splits ?? []) {
+    for (const split of existingSplits) {
       if (!map.has(split.userId)) {
         map.set(split.userId, {
           userId: split.userId,
           fullName: "Former member",
           avatarUrl: null,
           role: "member",
-          joinedAt: expense?.expenseDate ?? new Date().toISOString(),
+          joinedAt: expense?.expenseDate ?? recurring?.nextRunDate ?? new Date().toISOString(),
         });
       }
     }
     return [...map.values()];
-  }, [members, expense]);
+  }, [members, expense, recurring]);
+  const existingSplits = expense?.splits ?? recurring?.splits ?? [];
 
-  const [itemName, setItemName] = useState(expense?.itemName ?? "");
-  const [amount, setAmount] = useState(expense ? String(expense.amount) : "");
-  const [expenseDate, setExpenseDate] = useState(
-    expense?.expenseDate ?? format(new Date(), "yyyy-MM-dd"),
+  const [itemName, setItemName] = useState(expense?.itemName ?? recurring?.itemName ?? "");
+  const [amount, setAmount] = useState(
+    expense ? String(expense.amount) : recurring ? String(recurring.amount) : "",
   );
-  const [paidBy, setPaidBy] = useState(expense?.paidById ?? currentUserId);
+  const [expenseDate, setExpenseDate] = useState(
+    expense?.expenseDate ?? recurring?.nextRunDate ?? format(new Date(), "yyyy-MM-dd"),
+  );
+  const [frequency, setFrequency] = useState<Enums<"recurrence_frequency">>(
+    recurring?.frequency ?? "monthly",
+  );
+  const [paidBy, setPaidBy] = useState(expense?.paidById ?? recurring?.paidById ?? currentUserId);
   const [categoryId, setCategoryId] = useState<string | null>(
-    expense?.category?.id ?? null,
+    expense?.category?.id ?? recurring?.category?.id ?? null,
   );
   const [categoryList, setCategoryList] = useState(categories);
-  const [splitType, setSplitType] = useState<SplitType>(expense?.splitType ?? "equal");
-  const [note, setNote] = useState(expense?.note ?? "");
+  const [splitType, setSplitType] = useState<SplitType>(
+    expense?.splitType ?? recurring?.splitType ?? "equal",
+  );
+  const [note, setNote] = useState(expense?.note ?? recurring?.note ?? "");
   const [included, setIncluded] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     for (const person of people) {
-      const existing = expense?.splits.find((split) => split.userId === person.userId);
+      const existing = existingSplits.find((split) => split.userId === person.userId);
       initial[person.userId] = existing ? existing.isIncluded : true;
     }
     return initial;
   });
   const [percents, setPercents] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
-    const total = expense?.amount ?? 0;
+    const total = expense?.amount ?? recurring?.amount ?? 0;
     for (const person of people) {
-      const existing = expense?.splits.find((split) => split.userId === person.userId);
+      const existing = existingSplits.find((split) => split.userId === person.userId);
       const percent =
         total > 0 && existing?.isIncluded
           ? roundMoney((existing.shareAmount / total) * 100)
@@ -104,7 +120,7 @@ export function ExpenseForm({
   const [shares, setShares] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
     for (const person of people) {
-      const existing = expense?.splits.find((split) => split.userId === person.userId);
+      const existing = existingSplits.find((split) => split.userId === person.userId);
       initial[person.userId] = existing?.isIncluded
         ? String(Math.max(1, Math.round(existing.shareAmount * 100)))
         : "1";
@@ -114,7 +130,7 @@ export function ExpenseForm({
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
     for (const person of people) {
-      const existing = expense?.splits.find((split) => split.userId === person.userId);
+      const existing = existingSplits.find((split) => split.userId === person.userId);
       initial[person.userId] = existing ? String(existing.shareAmount) : "";
     }
     return initial;
@@ -144,14 +160,12 @@ export function ExpenseForm({
 
     setPending(true);
     try {
-      const result = await saveExpenseAction({
-        id: expense?.id,
+      const payload = {
         householdId,
         paidBy,
         categoryId,
         itemName,
         amount: total,
-        expenseDate,
         splitType,
         note: note.trim() || null,
         splits: computed.map((split) => ({
@@ -159,8 +173,22 @@ export function ExpenseForm({
           shareAmount: split.shareAmount,
           isIncluded: split.included,
         })),
-        next,
-      });
+      };
+      const result =
+        mode === "recurring"
+          ? await saveRecurringAction({
+              ...payload,
+              id: recurring?.id,
+              frequency,
+              nextRunDate: expenseDate,
+              active: recurring?.active ?? true,
+            })
+          : await saveExpenseAction({
+              ...payload,
+              id: expense?.id,
+              expenseDate,
+              next,
+            });
       if (!result.ok) {
         toast.error(result.error);
       }
@@ -202,7 +230,7 @@ export function ExpenseForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="expenseDate">Date</Label>
+          <Label htmlFor="expenseDate">{mode === "recurring" ? "Next run" : "Date"}</Label>
           <Input
             id="expenseDate"
             type="date"
@@ -211,6 +239,27 @@ export function ExpenseForm({
             required
           />
         </div>
+        {mode === "recurring" ? (
+          <div className="space-y-2">
+            <Label>Frequency</Label>
+            <Select
+              value={frequency}
+              onValueChange={(value) => {
+                if (value === "monthly" || value === "weekly") {
+                  setFrequency(value);
+                }
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="weekly">Weekly</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
         <div className="space-y-2">
           <Label>Paid by</Label>
           <Select value={paidBy} onValueChange={(value) => {
@@ -373,7 +422,13 @@ export function ExpenseForm({
 
       <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={pending || !valid}>
         {pending ? <Loader2Icon className="animate-spin" /> : null}
-        {expense ? "Save expense" : "Add expense"}
+        {mode === "recurring"
+          ? recurring
+            ? "Save template"
+            : "Add template"
+          : expense
+            ? "Save expense"
+            : "Add expense"}
       </Button>
     </form>
   );

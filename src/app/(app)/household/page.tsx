@@ -39,12 +39,17 @@ export default async function HouseholdPage() {
         <p className="text-muted-foreground">
           Invite roommates and switch between households.
         </p>
-        <Link
-          href="/household/categories"
-          className="mt-2 inline-block text-sm font-medium underline-offset-4 hover:underline"
-        >
-          Manage categories
-        </Link>
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm font-medium">
+          <Link href="/household/categories" className="underline-offset-4 hover:underline">
+            Categories
+          </Link>
+          <Link href="/household/budgets" className="underline-offset-4 hover:underline">
+            Budgets
+          </Link>
+          <Link href="/household/recurring" className="underline-offset-4 hover:underline">
+            Recurring
+          </Link>
+        </div>
       </div>
 
       <Card>

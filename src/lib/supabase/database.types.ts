@@ -216,6 +216,7 @@ export type Database = {
           created_at: string;
           updated_at: string;
           edited_by: string | null;
+          recurring_expense_id: string | null;
         };
         Insert: {
           id?: string;
@@ -233,6 +234,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           edited_by?: string | null;
+          recurring_expense_id?: string | null;
         };
         Update: {
           id?: string;
@@ -250,6 +252,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           edited_by?: string | null;
+          recurring_expense_id?: string | null;
         };
         Relationships: [
           {
@@ -271,6 +274,13 @@ export type Database = {
             columns: ["category_id"];
             isOneToOne: false;
             referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_recurring_expense_id_fkey";
+            columns: ["recurring_expense_id"];
+            isOneToOne: false;
+            referencedRelation: "recurring_expenses";
             referencedColumns: ["id"];
           },
         ];
@@ -424,6 +434,20 @@ export type Database = {
             referencedRelation: "households";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "recurring_expenses_paid_by_fkey";
+            columns: ["paid_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "recurring_expenses_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
         ];
       };
       recurring_expense_splits: {
@@ -454,6 +478,13 @@ export type Database = {
             columns: ["recurring_expense_id"];
             isOneToOne: false;
             referencedRelation: "recurring_expenses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "recurring_expense_splits_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -507,6 +538,49 @@ export type Database = {
           p_category_id?: string | null;
           p_note?: string | null;
           p_id?: string | null;
+          p_recurring_expense_id?: string | null;
+        };
+        Returns: string;
+      };
+      save_recurring_expense: {
+        Args: {
+          p_household_id: string;
+          p_paid_by: string;
+          p_item_name: string;
+          p_amount: number;
+          p_split_type: Database["public"]["Enums"]["split_type"];
+          p_splits: Json;
+          p_frequency: Database["public"]["Enums"]["recurrence_frequency"];
+          p_next_run_date: string;
+          p_category_id?: string | null;
+          p_note?: string | null;
+          p_id?: string | null;
+          p_active?: boolean;
+        };
+        Returns: string;
+      };
+      apply_recurring_expense: {
+        Args: { p_id: string };
+        Returns: string;
+      };
+      skip_recurring_expense: {
+        Args: { p_id: string };
+        Returns: string;
+      };
+      upsert_budget: {
+        Args: {
+          p_household_id: string;
+          p_year: number;
+          p_month: number;
+          p_amount: number | null;
+          p_category_id?: string | null;
+        };
+        Returns: number | null;
+      };
+      advance_recurring_date: {
+        Args: {
+          p_date: string;
+          p_frequency: Database["public"]["Enums"]["recurrence_frequency"];
         };
         Returns: string;
       };

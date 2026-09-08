@@ -3,11 +3,13 @@ import { format, parseISO } from "date-fns";
 import { getAppContext, parsePeriod } from "@/lib/app-context";
 import { listCategories } from "@/lib/expenses";
 import { budgetStatus, getDashboardStats } from "@/lib/dashboard";
+import { listDueRecurringExpenses } from "@/lib/recurring";
 import { formatMoney } from "@/lib/money";
 import { MonthSwitcher } from "@/components/expenses/month-switcher";
 import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
 import { OverallBudgetForm } from "@/components/dashboard/overall-budget-form";
 import { QuickAddExpense } from "@/components/dashboard/quick-add-expense";
+import { RecurringDueActions } from "@/components/recurring/recurring-due-actions";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -44,9 +46,10 @@ export default async function DashboardPage({
   const params = await searchParams;
   const { user, household, members, isAdmin } = await getAppContext();
   const { year, month } = parsePeriod(params.year, params.month);
-  const [{ picker }, stats] = await Promise.all([
+  const [{ picker }, stats, dueRecurring] = await Promise.all([
     listCategories(household.householdId),
     getDashboardStats(household.householdId, year, month),
+    listDueRecurringExpenses(household.householdId, format(new Date(), "yyyy-MM-dd")),
   ]);
 
   const status = budgetStatus(stats.totalSpent, stats.overallBudget);
@@ -78,6 +81,20 @@ export default async function DashboardPage({
           />
         </div>
       </div>
+
+      {dueRecurring.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Due recurring expenses</CardTitle>
+            <CardDescription>
+              Confirm rent and other templates to add them for the due date, or skip this run.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RecurringDueActions items={dueRecurring} currency={household.currency} />
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
@@ -146,6 +163,12 @@ export default async function DashboardPage({
                 currentAmount={stats.overallBudget}
               />
             ) : null}
+            <Link
+              href={`/household/budgets?year=${year}&month=${month}`}
+              className="inline-block text-sm font-medium underline-offset-4 hover:underline"
+            >
+              Budget settings
+            </Link>
           </CardContent>
         </Card>
       </div>

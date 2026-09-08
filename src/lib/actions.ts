@@ -45,8 +45,17 @@ export function publicErrorMessage(message: string) {
   if (lower.includes("not a household member")) {
     return "You are not in this household.";
   }
-  if (lower.includes("year and month must both")) {
-    return "Pick a month or view all-time, not a mix of both.";
+  if (lower.includes("you cannot edit this recurring")) {
+    return "You can only edit recurring expenses you created, unless you are an admin.";
+  }
+  if (lower.includes("not due yet")) {
+    return "That recurring expense is not due yet.";
+  }
+  if (lower.includes("recurring expense is paused")) {
+    return "Resume this template before adding it.";
+  }
+  if (lower.includes("recurring expense not found")) {
+    return "That recurring expense could not be found.";
   }
   if (lower.includes("duplicate key") || lower.includes("unique")) {
     return "A category with that name already exists.";
