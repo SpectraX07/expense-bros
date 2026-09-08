@@ -495,6 +495,21 @@ export type Database = {
         Args: { p_recurring_expense_id: string };
         Returns: boolean;
       };
+      save_expense: {
+        Args: {
+          p_household_id: string;
+          p_paid_by: string;
+          p_item_name: string;
+          p_amount: number;
+          p_expense_date: string;
+          p_split_type: Database["public"]["Enums"]["split_type"];
+          p_splits: Json;
+          p_category_id?: string | null;
+          p_note?: string | null;
+          p_id?: string | null;
+        };
+        Returns: string;
+      };
     };
     Enums: {
       member_role: "admin" | "member";

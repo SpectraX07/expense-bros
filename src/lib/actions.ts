@@ -24,6 +24,21 @@ export function publicErrorMessage(message: string) {
   if (lower.includes("not authenticated")) {
     return "Please sign in again.";
   }
+  if (lower.includes("splits must add up")) {
+    return "Splits must add up to the total amount.";
+  }
+  if (lower.includes("at least one person")) {
+    return "Select at least one person to split with.";
+  }
+  if (lower.includes("cannot edit this expense")) {
+    return "You can only edit expenses you created, unless you are an admin.";
+  }
+  if (lower.includes("payer must be")) {
+    return "Choose who paid from the current household.";
+  }
+  if (lower.includes("duplicate key") || lower.includes("unique")) {
+    return "A category with that name already exists.";
+  }
 
   return message;
 }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import {
   Card,
@@ -38,6 +39,12 @@ export default async function HouseholdPage() {
         <p className="text-muted-foreground">
           Invite roommates and switch between households.
         </p>
+        <Link
+          href="/household/categories"
+          className="mt-2 inline-block text-sm font-medium underline-offset-4 hover:underline"
+        >
+          Manage categories
+        </Link>
       </div>
 
       <Card>
