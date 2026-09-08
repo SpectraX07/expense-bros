@@ -49,7 +49,7 @@ export function LeaveHouseholdButton({
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger render={<Button variant="destructive" />}>
+      <AlertDialogTrigger render={<Button variant="outline" />}>
         Leave household
       </AlertDialogTrigger>
       <AlertDialogContent>

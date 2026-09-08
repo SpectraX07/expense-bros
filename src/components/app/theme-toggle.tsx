@@ -3,8 +3,15 @@
 import { MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function ThemeToggle({ compact = false }: { compact?: boolean }) {
+export function ThemeToggle({
+  compact = false,
+  className,
+}: {
+  compact?: boolean;
+  className?: string;
+}) {
   const { resolvedTheme, setTheme } = useTheme();
 
   return (
@@ -12,7 +19,7 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
       type="button"
       variant="ghost"
       size={compact ? "icon-sm" : "sm"}
-      className={compact ? undefined : "w-full justify-start"}
+      className={cn(!compact && "justify-start", className)}
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
       aria-label="Toggle color theme"
     >
@@ -20,8 +27,8 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
       <MoonIcon className="dark:hidden" />
       {compact ? null : (
         <>
-          <span className="dark:hidden">Dark mode</span>
-          <span className="hidden dark:inline">Light mode</span>
+          <span className="dark:hidden">Dark</span>
+          <span className="hidden dark:inline">Light</span>
         </>
       )}
     </Button>

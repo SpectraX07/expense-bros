@@ -4,6 +4,7 @@ import { listCategories } from "@/lib/expenses";
 import { getDashboardStats } from "@/lib/dashboard";
 import { createClient } from "@/lib/supabase/server";
 import { toMoneyNumber } from "@/lib/money";
+import { PageHeader } from "@/components/app/page-header";
 import { MonthSwitcher } from "@/components/expenses/month-switcher";
 import { BudgetRow } from "@/components/budgets/budget-row";
 
@@ -40,19 +41,18 @@ export default async function BudgetsPage({
   const spentByCategory = new Map(stats.byCategory.map((row) => [row.id, row.amount]));
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Budgets</h1>
-        <p className="text-muted-foreground">
-          Set an overall cap and optional per-category limits for this month.
-        </p>
+    <div className="w-full space-y-6">
+      <PageHeader
+        title="Budgets"
+        description="Set an overall cap and optional per-category limits for this month."
+      >
         <Link
           href={`/dashboard?year=${year}&month=${month}`}
-          className="mt-2 inline-block text-sm font-medium underline-offset-4 hover:underline"
+          className="text-sm font-medium underline-offset-4 hover:underline"
         >
           View dashboard
         </Link>
-      </div>
+      </PageHeader>
 
       <MonthSwitcher year={year} month={month} />
 

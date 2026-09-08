@@ -18,6 +18,15 @@ export function centsToMoney(cents: number) {
   return roundMoney(cents / 100);
 }
 
+export function currencySymbol(currency: string) {
+  const parts = new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0,
+  }).formatToParts(0);
+  return parts.find((part) => part.type === "currency")?.value ?? currency;
+}
+
 export function formatMoney(amount: number | string, currency: string) {
   return new Intl.NumberFormat(undefined, {
     style: "currency",

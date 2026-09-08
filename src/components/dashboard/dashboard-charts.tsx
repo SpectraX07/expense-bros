@@ -25,14 +25,14 @@ import { formatMoney } from "@/lib/money";
 import type { DashboardStats } from "@/lib/dashboard";
 
 const PAYER_COLORS = [
-  "#2563eb",
-  "#16a34a",
-  "#d97706",
-  "#db2777",
+  "var(--chart-1)",
+  "var(--chart-3)",
+  "var(--chart-2)",
+  "var(--chart-5)",
+  "var(--chart-4)",
   "#7c3aed",
+  "#db2777",
   "#0891b2",
-  "#4f46e5",
-  "#ca8a04",
 ];
 
 type TooltipEntry = {
@@ -70,7 +70,7 @@ function MoneyTooltip({
 
 function ChartEmpty({ message }: { message: string }) {
   return (
-    <div className="flex h-56 items-center justify-center px-4 text-center text-sm text-muted-foreground">
+    <div className="flex h-72 items-center justify-center px-4 text-center text-sm text-muted-foreground">
       {message}
     </div>
   );
@@ -103,7 +103,7 @@ export function DashboardCharts({
           {stats.byCategory.length === 0 ? (
             <ChartEmpty message="Add an expense to see the category split." />
           ) : (
-            <div className="h-56">
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -140,7 +140,7 @@ export function DashboardCharts({
           {payers.length === 0 ? (
             <ChartEmpty message="Nobody has paid anything this month yet." />
           ) : (
-            <div className="h-56">
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={payers}
@@ -178,7 +178,7 @@ export function DashboardCharts({
           {trend.every((row) => row.amount === 0) ? (
             <ChartEmpty message="Trend shows up after a few months of expenses." />
           ) : (
-            <div className="h-56">
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={trend} margin={{ left: 4, right: 8, top: 8, bottom: 0 }}>
                   <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border" />
@@ -194,7 +194,7 @@ export function DashboardCharts({
                     }
                   />
                   <Tooltip content={<MoneyTooltip currency={currency} />} />
-                  <Bar dataKey="amount" name="Spent" fill="#2563eb" radius={[6, 6, 0, 0]} maxBarSize={42} />
+                  <Bar dataKey="amount" name="Spent" fill="var(--chart-1)" radius={[6, 6, 0, 0]} maxBarSize={42} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

@@ -65,6 +65,7 @@ export function CreateHouseholdForm({
         <Label htmlFor="currency">Currency</Label>
         <Select
           value={currency}
+          items={Object.fromEntries(CURRENCIES.map((item) => [item.code, item.label]))}
           onValueChange={(value) => {
             if (typeof value === "string") {
               setCurrency(value as CurrencyCode);

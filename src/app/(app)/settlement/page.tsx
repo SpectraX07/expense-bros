@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
+import { PageHeader } from "@/components/app/page-header";
 import { cn } from "@/lib/utils";
 
 function personLabel(name: string, userId: string, currentUserId: string) {
@@ -75,34 +76,29 @@ export default async function SettlementPage({
   const settled = netCents === 0;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Settlement</h1>
-          <p className="text-muted-foreground">
-            Fewest transfers to square up {allTime ? "across all months" : "this month"}.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <ScopeToggle allTime={allTime} year={year} month={month} />
-          {allTime ? null : <MonthSwitcher year={year} month={month} />}
-          {allTime ? null : (
-            <Link
-              href={`/api/export?year=${year}&month=${month}`}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-            >
-              Export CSV
-            </Link>
-          )}
-        </div>
-      </div>
+    <div className="w-full space-y-6">
+      <PageHeader
+        title="Settlement"
+        description={`Fewest transfers to square up ${allTime ? "across all months" : "this month"}.`}
+      >
+        <ScopeToggle allTime={allTime} year={year} month={month} />
+        {allTime ? null : <MonthSwitcher year={year} month={month} />}
+        {allTime ? null : (
+          <Link
+            href={`/api/export?year=${year}&month=${month}`}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            Export CSV
+          </Link>
+        )}
+      </PageHeader>
 
       <Card>
         <CardHeader>
           <CardDescription>Your position</CardDescription>
           <CardTitle
             className={cn(
-              "text-2xl tabular-nums",
+              "font-heading text-3xl tabular-nums",
               netCents < 0 ? "text-destructive" : null,
               netCents > 0 ? "text-emerald-600 dark:text-emerald-400" : null,
             )}

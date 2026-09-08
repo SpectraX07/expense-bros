@@ -20,6 +20,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
+import { PageHeader } from "@/components/app/page-header";
+import { EmptyState } from "@/components/app/empty-state";
 import { cn } from "@/lib/utils";
 
 const STATUS_BADGE: Record<
@@ -62,26 +64,25 @@ export default async function DashboardPage({
   const barWidth = Math.min(Math.max(status.percent, 0), 100);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
+    <div className="w-full space-y-6">
+      <PageHeader
+        title="Dashboard"
+        description={
+          <>
             {household.name} · {household.currency}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <MonthSwitcher year={year} month={month} />
-          <QuickAddExpense
-            householdId={household.householdId}
-            currency={household.currency}
-            members={members}
-            categories={picker}
-            currentUserId={user.id}
-            next={next}
-          />
-        </div>
-      </div>
+          </>
+        }
+      >
+        <MonthSwitcher year={year} month={month} />
+        <QuickAddExpense
+          householdId={household.householdId}
+          currency={household.currency}
+          members={members}
+          categories={picker}
+          currentUserId={user.id}
+          next={next}
+        />
+      </PageHeader>
 
       {dueRecurring.length > 0 ? (
         <Card>
@@ -97,11 +98,11 @@ export default async function DashboardPage({
         </Card>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <Card className="overflow-hidden">
           <CardHeader>
             <CardDescription>Total spent</CardDescription>
-            <CardTitle className="text-2xl tabular-nums">
+            <CardTitle className="font-heading text-3xl tabular-nums">
               {formatMoney(stats.totalSpent, household.currency)}
             </CardTitle>
           </CardHeader>
@@ -119,7 +120,7 @@ export default async function DashboardPage({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <CardDescription>Budget vs actual</CardDescription>
-                <CardTitle className="text-2xl tabular-nums">
+                <CardTitle className="font-heading text-3xl tabular-nums">
                   {stats.overallBudget === null
                     ? "—"
                     : formatMoney(stats.overallBudget, household.currency)}
@@ -172,62 +173,61 @@ export default async function DashboardPage({
             </Link>
           </CardContent>
         </Card>
+
+        <Card className="md:col-span-2 xl:col-span-1">
+          <CardHeader>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <CardTitle>Recent</CardTitle>
+                <CardDescription>Latest expenses this month.</CardDescription>
+              </div>
+              <Link
+                href={`/history?year=${year}&month=${month}`}
+                className="text-sm font-medium underline-offset-4 hover:underline"
+              >
+                View history
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {stats.recent.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No expenses to list yet.</p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {stats.recent.map((expense) => (
+                  <li
+                    key={expense.id}
+                    className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{expense.itemName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(parseISO(expense.expenseDate), "d MMM")} · {expense.paidByName}
+                      </p>
+                    </div>
+                    <p className="text-sm font-medium tabular-nums">
+                      {formatMoney(expense.amount, household.currency)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {stats.expenseCount === 0 ? (
-        <div className="rounded-xl border border-dashed border-border p-8 text-center">
-          <p className="font-medium">Nothing spent this month yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Use Add expense above to log the first one without leaving this page.
-          </p>
-          <Link href="/expenses/new" className={cn(buttonVariants({ variant: "outline" }), "mt-4")}>
+        <EmptyState
+          title="Nothing spent this month yet"
+          description="Log the first expense without leaving this page, or open the full form."
+        >
+          <Link href="/expenses/new" className={cn(buttonVariants({ variant: "outline" }))}>
             Open full form
           </Link>
-        </div>
+        </EmptyState>
       ) : null}
 
       <DashboardCharts stats={stats} currency={household.currency} />
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <CardTitle>Recent</CardTitle>
-              <CardDescription>Latest expenses this month.</CardDescription>
-            </div>
-            <Link
-              href={`/history?year=${year}&month=${month}`}
-              className="text-sm font-medium underline-offset-4 hover:underline"
-            >
-              View history
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {stats.recent.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No expenses to list yet.</p>
-          ) : (
-            <ul className="divide-y divide-border">
-              {stats.recent.map((expense) => (
-                <li
-                  key={expense.id}
-                  className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{expense.itemName}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {format(parseISO(expense.expenseDate), "d MMM")} · {expense.paidByName}
-                    </p>
-                  </div>
-                  <p className="text-sm font-medium tabular-nums">
-                    {formatMoney(expense.amount, household.currency)}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

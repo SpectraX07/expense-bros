@@ -5,8 +5,10 @@ import { listCategories, listExpenses } from "@/lib/expenses";
 import { formatMoney } from "@/lib/money";
 import { MonthSwitcher } from "@/components/expenses/month-switcher";
 import { buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { HistoryFilters } from "@/components/expenses/history-filters";
+import { PageHeader } from "@/components/app/page-header";
+import { EmptyState } from "@/components/app/empty-state";
 import { cn } from "@/lib/utils";
 
 export default async function HistoryPage({
@@ -42,77 +44,50 @@ export default async function HistoryPage({
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">History</h1>
-          <p className="text-muted-foreground">Filter by month, category, or who paid.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href={`/api/export?year=${year}&month=${month}`}
-            className={cn(buttonVariants({ variant: "outline" }))}
-          >
-            Export CSV
-          </Link>
-          <Link href="/expenses/new" className={cn(buttonVariants())}>
-            Add expense
-          </Link>
-        </div>
-      </div>
+    <div className="w-full space-y-6">
+      <PageHeader title="History" description="Filter by month, category, or who paid.">
+        <Link
+          href={`/api/export?year=${year}&month=${month}`}
+          className={cn(buttonVariants({ variant: "outline" }))}
+        >
+          Export CSV
+        </Link>
+        <Link href="/expenses/new" className={cn(buttonVariants())}>
+          Add expense
+        </Link>
+      </PageHeader>
 
       <MonthSwitcher year={year} month={month} extra={extra} />
 
-      <form className="grid gap-2 sm:grid-cols-4" method="get">
-        <input type="hidden" name="year" value={year} />
-        <input type="hidden" name="month" value={month} />
-        <Input name="q" defaultValue={params.q ?? ""} placeholder="Search items" />
-        <select
-          name="category"
-          defaultValue={params.category ?? ""}
-          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
-        >
-          <option value="">All categories</option>
-          {picker.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-        <select
-          name="payer"
-          defaultValue={params.payer ?? ""}
-          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
-        >
-          <option value="">Anyone paid</option>
-          {members.map((member) => (
-            <option key={member.userId} value={member.userId}>
-              {member.fullName}
-            </option>
-          ))}
-        </select>
-        <button type="submit" className={cn(buttonVariants({ variant: "outline" }))}>
-          Apply
-        </button>
-      </form>
+      <HistoryFilters
+        year={year}
+        month={month}
+        query={params.q ?? ""}
+        categoryId={params.category ?? ""}
+        payerId={params.payer ?? ""}
+        categories={picker.map((category) => ({ id: category.id, name: category.name }))}
+        members={members.map((member) => ({
+          userId: member.userId,
+          fullName: member.fullName,
+        }))}
+      />
 
       {expenses.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border p-8 text-center">
-          <p className="font-medium">No expenses this month</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Add one and it will show up here with who paid and how it was split.
-          </p>
-          <Link href="/expenses/new" className={cn(buttonVariants(), "mt-4")}>
+        <EmptyState
+          title="No expenses this month"
+          description="Add one and it will show up here with who paid and how it was split."
+        >
+          <Link href="/expenses/new" className={cn(buttonVariants())}>
             Add expense
           </Link>
-        </div>
+        </EmptyState>
       ) : (
         <ul className="space-y-2">
           {expenses.map((expense) => {
             const canEdit = isAdmin || expense.createdBy === user.id;
             return (
               <li key={expense.id}>
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/80 bg-card/80 px-4 py-3 shadow-sm">
                   <div className="min-w-0">
                     <p className="truncate font-medium">{expense.itemName}</p>
                     <p className="text-sm text-muted-foreground">

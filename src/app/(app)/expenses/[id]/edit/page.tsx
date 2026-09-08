@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getAppContext } from "@/lib/app-context";
 import { getExpense, listCategories } from "@/lib/expenses";
+import { PageHeader } from "@/components/app/page-header";
 import { ExpenseForm } from "@/components/expenses/expense-form";
 import { DeleteExpenseButton } from "@/components/expenses/delete-expense-button";
 
@@ -26,14 +27,10 @@ export default async function EditExpensePage({
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Edit expense</h1>
-          <p className="text-muted-foreground">{expense.itemName}</p>
-        </div>
+    <div className="w-full space-y-6">
+      <PageHeader title="Edit expense" description={expense.itemName}>
         <DeleteExpenseButton expenseId={expense.id} itemName={expense.itemName} />
-      </div>
+      </PageHeader>
       <ExpenseForm
         householdId={household.householdId}
         currency={household.currency}

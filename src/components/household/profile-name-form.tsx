@@ -38,8 +38,8 @@ export function ProfileNameForm({ fullName }: { fullName: string }) {
   }
 
   return (
-    <form className="space-y-4" onSubmit={onSubmit}>
-      <div className="space-y-2">
+    <form className="flex flex-col gap-3 sm:flex-row sm:items-end" onSubmit={onSubmit}>
+      <div className="min-w-0 flex-1 space-y-2">
         <Label htmlFor="display-name">Display name</Label>
         <Input
           id="display-name"

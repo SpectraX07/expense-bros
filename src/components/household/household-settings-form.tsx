@@ -62,41 +62,44 @@ export function HouseholdSettingsForm({
 
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
-      <div className="space-y-2">
-        <Label htmlFor="settings-household-name">Household name</Label>
-        <Input
-          id="settings-household-name"
-          name="name"
-          required
-          minLength={2}
-          defaultValue={name}
-        />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="settings-household-name">Household name</Label>
+          <Input
+            id="settings-household-name"
+            name="name"
+            required
+            minLength={2}
+            defaultValue={name}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="settings-currency">Currency</Label>
+          <Select
+            value={selectedCurrency}
+            items={Object.fromEntries(CURRENCIES.map((item) => [item.code, item.label]))}
+            onValueChange={(value) => {
+              if (typeof value === "string") {
+                setSelectedCurrency(value as CurrencyCode);
+              }
+            }}
+          >
+            <SelectTrigger id="settings-currency" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CURRENCIES.map((item) => (
+                <SelectItem key={item.code} value={item.code}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="settings-currency">Currency</Label>
-        <Select
-          value={selectedCurrency}
-          onValueChange={(value) => {
-            if (typeof value === "string") {
-              setSelectedCurrency(value as CurrencyCode);
-            }
-          }}
-        >
-          <SelectTrigger id="settings-currency" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {CURRENCIES.map((item) => (
-              <SelectItem key={item.code} value={item.code}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground">
-          Changing currency does not convert amounts already logged.
-        </p>
-      </div>
+      <p className="text-xs text-muted-foreground">
+        Changing currency does not convert amounts already logged.
+      </p>
       <Button type="submit" disabled={pending}>
         {pending ? <Loader2Icon className="animate-spin" /> : null}
         Save household

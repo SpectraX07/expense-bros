@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAppContext } from "@/lib/app-context";
 import { listCategories } from "@/lib/expenses";
+import { PageHeader } from "@/components/app/page-header";
 import { ExpenseForm } from "@/components/expenses/expense-form";
 
 export default async function NewRecurringPage() {
@@ -8,13 +9,11 @@ export default async function NewRecurringPage() {
   const { picker } = await listCategories(household.householdId);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">New recurring expense</h1>
-        <p className="text-muted-foreground">
-          Saved as a template. The dashboard will ask you to confirm it when the next run date arrives.
-        </p>
-      </div>
+    <div className="w-full space-y-6">
+      <PageHeader
+        title="New recurring expense"
+        description="Saved as a template. The dashboard will ask you to confirm it when the next run date arrives."
+      />
       <ExpenseForm
         mode="recurring"
         householdId={household.householdId}

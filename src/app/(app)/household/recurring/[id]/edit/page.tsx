@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getAppContext } from "@/lib/app-context";
 import { listCategories } from "@/lib/expenses";
 import { getRecurringExpense } from "@/lib/recurring";
+import { PageHeader } from "@/components/app/page-header";
 import { ExpenseForm } from "@/components/expenses/expense-form";
 
 export default async function EditRecurringPage({
@@ -25,13 +26,11 @@ export default async function EditRecurringPage({
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Edit recurring expense</h1>
-        <p className="text-muted-foreground">
-          Changes apply to future runs, not expenses already logged.
-        </p>
-      </div>
+    <div className="w-full space-y-6">
+      <PageHeader
+        title="Edit recurring expense"
+        description="Changes apply to future runs, not expenses already logged."
+      />
       <ExpenseForm
         mode="recurring"
         householdId={household.householdId}

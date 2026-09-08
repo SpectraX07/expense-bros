@@ -24,9 +24,9 @@ export function Brand({
           alt=""
           width={80}
           height={80}
-          className="size-9 shrink-0 rounded-lg object-cover object-[center_32%]"
+          className="size-10 shrink-0 rounded-xl object-cover object-[center_32%] ring-1 ring-white/15"
         />
-        <span className="font-heading truncate text-sm font-semibold tracking-tight">
+        <span className="font-heading truncate text-base font-semibold tracking-tight">
           {APP_NAME}
         </span>
       </Link>

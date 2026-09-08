@@ -3,6 +3,8 @@ import { format, parseISO } from "date-fns";
 import { getAppContext } from "@/lib/app-context";
 import { listRecurringExpenses } from "@/lib/recurring";
 import { formatMoney } from "@/lib/money";
+import { PageHeader } from "@/components/app/page-header";
+import { EmptyState } from "@/components/app/empty-state";
 import { RecurringRowActions } from "@/components/recurring/recurring-row-actions";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -13,29 +15,25 @@ export default async function RecurringPage() {
   const templates = await listRecurringExpenses(household.householdId);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Recurring</h1>
-          <p className="text-muted-foreground">
-            Rent and bills. Confirm due ones from the dashboard when the date arrives.
-          </p>
-        </div>
+    <div className="w-full space-y-6">
+      <PageHeader
+        title="Recurring"
+        description="Rent and bills. Confirm due ones from the dashboard when the date arrives."
+      >
         <Link href="/household/recurring/new" className={cn(buttonVariants())}>
           Add template
         </Link>
-      </div>
+      </PageHeader>
 
       {templates.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border p-8 text-center">
-          <p className="font-medium">No recurring expenses yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Add rent, Wi-Fi, or any bill that repeats so you are not retyping it every month.
-          </p>
-          <Link href="/household/recurring/new" className={cn(buttonVariants(), "mt-4")}>
+        <EmptyState
+          title="No recurring expenses yet"
+          description="Add rent, Wi-Fi, or any bill that repeats so you are not retyping it every month."
+        >
+          <Link href="/household/recurring/new" className={cn(buttonVariants())}>
             Add template
           </Link>
-        </div>
+        </EmptyState>
       ) : (
         <ul className="space-y-2">
           {templates.map((item) => {
@@ -43,7 +41,7 @@ export default async function RecurringPage() {
             return (
               <li
                 key={item.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/80 bg-card/80 px-4 py-3 shadow-sm"
               >
                 <div className="min-w-0">
                   <p className="font-medium">{item.itemName}</p>

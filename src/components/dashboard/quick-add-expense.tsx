@@ -42,7 +42,7 @@ export function QuickAddExpense({
         <SheetHeader>
           <SheetTitle>Add expense</SheetTitle>
           <SheetDescription>
-            Log it here without leaving the dashboard. Splits default to equal.
+            Amount, a short name, a category, then save. Extra details stay optional.
           </SheetDescription>
         </SheetHeader>
         <div className="px-4 pb-6">

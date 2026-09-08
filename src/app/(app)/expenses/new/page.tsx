@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAppContext } from "@/lib/app-context";
 import { listCategories } from "@/lib/expenses";
+import { PageHeader } from "@/components/app/page-header";
 import { ExpenseForm } from "@/components/expenses/expense-form";
 
 export default async function NewExpensePage() {
@@ -8,13 +9,11 @@ export default async function NewExpensePage() {
   const { picker } = await listCategories(household.householdId);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Add expense</h1>
-        <p className="text-muted-foreground">
-          Split equally by default, or switch to percentages, shares, or custom amounts.
-        </p>
-      </div>
+    <div className="w-full space-y-6">
+      <PageHeader
+        title="Add expense"
+        description="Amount first. Name it, tap a category, and save. Extra details are optional."
+      />
       <ExpenseForm
         householdId={household.householdId}
         currency={household.currency}
