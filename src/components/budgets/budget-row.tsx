@@ -6,7 +6,7 @@ import { Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { upsertBudgetAction } from "@/app/actions/recurring";
-import { budgetStatus } from "@/lib/dashboard";
+import { budgetStatus } from "@/lib/budget-status";
 import { formatMoney, toMoneyNumber } from "@/lib/money";
 import { cn } from "@/lib/utils";
 

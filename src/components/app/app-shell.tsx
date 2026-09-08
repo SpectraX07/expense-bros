@@ -8,7 +8,9 @@ import {
   LayoutDashboardIcon,
   LogOutIcon,
   PlusIcon,
+  RepeatIcon,
   ScaleIcon,
+  WalletIcon,
 } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { HouseholdSwitcher } from "@/components/app/household-switcher";
@@ -19,13 +21,27 @@ import { signOut } from "@/app/actions/auth";
 import type { AuthUser } from "@/lib/auth";
 import type { HouseholdMembership } from "@/lib/households";
 
-const NAV = [
+const PRIMARY_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon },
   { href: "/expenses/new", label: "Add expense", icon: PlusIcon, shortLabel: "Add" },
   { href: "/history", label: "History", icon: HistoryIcon },
   { href: "/settlement", label: "Settlement", icon: ScaleIcon, shortLabel: "Settle" },
   { href: "/household", label: "Household", icon: HomeIcon, shortLabel: "Home" },
 ] as const;
+
+const MANAGE_NAV = [
+  { href: "/household/budgets", label: "Budgets", icon: WalletIcon },
+  { href: "/household/recurring", label: "Recurring", icon: RepeatIcon },
+] as const;
+
+function navIsActive(href: string, pathname: string) {
+  if (href === "/household") {
+    return (
+      pathname === "/household" || pathname.startsWith("/household/categories")
+    );
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function AppShell({
   user,
@@ -55,9 +71,30 @@ export function AppShell({
           />
         </div>
         <nav className="flex flex-1 flex-col gap-1 px-3">
-          {NAV.map((item) => {
-            const active =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+          {PRIMARY_NAV.map((item) => {
+            const active = navIsActive(item.href, pathname);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors",
+                  active
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                )}
+              >
+                <Icon className="size-4" />
+                {item.label}
+              </Link>
+            );
+          })}
+          <p className="mt-3 px-2.5 pb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+            Manage
+          </p>
+          {MANAGE_NAV.map((item) => {
+            const active = navIsActive(item.href, pathname);
             const Icon = item.icon;
             return (
               <Link
@@ -112,9 +149,8 @@ export function AppShell({
 
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 backdrop-blur md:hidden">
         <ul className="grid grid-cols-5">
-          {NAV.map((item) => {
-            const active =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+          {PRIMARY_NAV.map((item) => {
+            const active = navIsActive(item.href, pathname);
             const Icon = item.icon;
             const label = "shortLabel" in item ? item.shortLabel : item.label;
             return (

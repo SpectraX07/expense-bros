@@ -39,17 +39,36 @@ export default async function HouseholdPage() {
         <p className="text-muted-foreground">
           Invite roommates and switch between households.
         </p>
-        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm font-medium">
-          <Link href="/household/categories" className="underline-offset-4 hover:underline">
-            Categories
-          </Link>
-          <Link href="/household/budgets" className="underline-offset-4 hover:underline">
-            Budgets
-          </Link>
-          <Link href="/household/recurring" className="underline-offset-4 hover:underline">
-            Recurring
-          </Link>
-        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Link
+          href="/household/budgets"
+          className="rounded-xl border border-border p-4 transition-colors hover:bg-muted/50"
+        >
+          <p className="font-medium">Budgets</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Overall and per-category caps for a month.
+          </p>
+        </Link>
+        <Link
+          href="/household/recurring"
+          className="rounded-xl border border-border p-4 transition-colors hover:bg-muted/50"
+        >
+          <p className="font-medium">Recurring</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Rent and bills that repeat each month or week.
+          </p>
+        </Link>
+        <Link
+          href="/household/categories"
+          className="rounded-xl border border-border p-4 transition-colors hover:bg-muted/50"
+        >
+          <p className="font-medium">Categories</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Names and colors used when logging expenses.
+          </p>
+        </Link>
       </div>
 
       <Card>
