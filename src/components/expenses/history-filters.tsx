@@ -64,10 +64,6 @@ export function HistoryFilters({
   }
 
   useEffect(() => {
-    setSearch(query);
-  }, [query]);
-
-  useEffect(() => {
     return () => {
       if (debounceRef.current) {
         window.clearTimeout(debounceRef.current);

@@ -62,6 +62,7 @@ export default async function HistoryPage({
       <MonthSwitcher year={year} month={month} extra={extra} />
 
       <HistoryFilters
+        key={`${year}-${month}`}
         year={year}
         month={month}
         query={params.q ?? ""}

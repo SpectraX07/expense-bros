@@ -2,11 +2,15 @@
   "name": "expense-bros",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:push": "supabase db push",

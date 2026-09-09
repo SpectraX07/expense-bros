@@ -70,19 +70,47 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). Unauthenticated visits go to **Sign in**. After login with no household, you land on onboarding (create or join).
 
-### 5. Tests
+### 5. Tests and checks
 
 ```bash
 npm test
+npm run lint
+npm run typecheck
 ```
 
-Unit tests cover the settlement debt-simplification algorithm and CSV export escaping.
+GitHub Actions runs lint, typecheck, tests, and a production build on every push and pull request. Typecheck generates Next.js route types first (`next typegen`), so it works on a clean checkout.
+
+## Deploy on Vercel
+
+The app is a standard Next.js App Router project. Vercel picks that up automatically.
+
+1. Push this repo to GitHub, then **Import** it in [Vercel](https://vercel.com/new).
+2. Framework preset: **Next.js**. Node **20.9+** (this repo’s `.nvmrc` is 22). Leave the build/output commands on Vercel’s Next.js defaults.
+3. Add the same env vars as `.env.example` for **Production**, **Preview**, and **Development**:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+4. Deploy. The first production URL will look like `https://<project>.vercel.app`.
+5. In the **Supabase** dashboard → **Authentication → URL configuration**, add:
+   - Site URL: `https://<project>.vercel.app` (or your custom domain)
+   - Redirect URLs:
+     - `http://localhost:3000/auth/callback`
+     - `https://<project>.vercel.app/auth/callback`
+     - `https://<project>.vercel.app/join`
+     - If you use preview deploys, also add `https://<project>-*-<team>.vercel.app/auth/callback`
+
+Email magic links and password sign-in both return to `/auth/callback`. If those URLs are missing, login will bounce to `/login?error=auth`.
+
+Database migrations are **not** applied by Vercel. Keep using `npx supabase db push` against the hosted project when the schema changes.
+
+### Custom domain
+
+Add the domain in Vercel, then update the Supabase Site URL and redirect list to that domain (keep the `vercel.app` URLs if you still use them).
 
 ## Auth (Supabase dashboard)
 
-In **Authentication → URL configuration**, add:
+In **Authentication → URL configuration**, add the local URLs while developing, then the Vercel URLs from [Deploy on Vercel](#deploy-on-vercel):
 
-- Site URL: `http://localhost:3000`
+- Site URL: `http://localhost:3000` (production Site URL should be the live app)
 - Redirect URLs: `http://localhost:3000/auth/callback`
 
 Email/password and magic link both use `/auth/callback`. New users get a `profiles` row via a trigger on `auth.users`. After first login, create a household (you become admin, invite code is generated) or join with a code. Share `/join?code=YOURCODE` from Household settings.

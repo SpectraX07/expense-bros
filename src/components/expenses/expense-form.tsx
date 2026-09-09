@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ChevronDownIcon, Loader2Icon } from "lucide-react";
@@ -44,12 +44,33 @@ function prefsKey(householdId: string) {
   return `eb-last-expense:${householdId}`;
 }
 
-function readPrefs(householdId: string) {
+function writePrefs(householdId: string, categoryId: string | null, paidBy: string) {
   try {
-    const raw = localStorage.getItem(prefsKey(householdId));
-    if (!raw) {
-      return { categoryId: null as string | null, paidBy: null as string | null };
-    }
+    localStorage.setItem(prefsKey(householdId), JSON.stringify({ categoryId, paidBy }));
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
+
+function subscribePrefs(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  return () => window.removeEventListener("storage", onStoreChange);
+}
+
+function useExpensePrefs(householdId: string) {
+  const raw = useSyncExternalStore(
+    subscribePrefs,
+    () => localStorage.getItem(prefsKey(householdId)),
+    () => null,
+  );
+  return readPrefsFromRaw(raw);
+}
+
+function readPrefsFromRaw(raw: string | null) {
+  if (!raw) {
+    return { categoryId: null as string | null, paidBy: null as string | null };
+  }
+  try {
     const parsed = JSON.parse(raw) as { categoryId?: string | null; paidBy?: string | null };
     return {
       categoryId: parsed.categoryId ?? null,
@@ -57,14 +78,6 @@ function readPrefs(householdId: string) {
     };
   } catch {
     return { categoryId: null as string | null, paidBy: null as string | null };
-  }
-}
-
-function writePrefs(householdId: string, categoryId: string | null, paidBy: string) {
-  try {
-    localStorage.setItem(prefsKey(householdId), JSON.stringify({ categoryId, paidBy }));
-  } catch {
-    /* ignore quota / private mode */
   }
 }
 
@@ -112,6 +125,18 @@ export function ExpenseForm({
   }, [members, expense, recurring]);
   const existingSplits = expense?.splits ?? recurring?.splits ?? [];
 
+  const prefs = useExpensePrefs(householdId);
+  const rememberedPayer =
+    !isEditing && prefs.paidBy && people.some((person) => person.userId === prefs.paidBy)
+      ? prefs.paidBy
+      : null;
+  const rememberedCategory =
+    !isEditing &&
+    prefs.categoryId &&
+    categories.some((category) => category.id === prefs.categoryId)
+      ? prefs.categoryId
+      : null;
+
   const [itemName, setItemName] = useState(
     expense?.itemName ?? recurring?.itemName ?? defaultItemName ?? "",
   );
@@ -124,10 +149,19 @@ export function ExpenseForm({
   const [frequency, setFrequency] = useState<Enums<"recurrence_frequency">>(
     recurring?.frequency ?? "monthly",
   );
-  const [paidBy, setPaidBy] = useState(expense?.paidById ?? recurring?.paidById ?? currentUserId);
-  const [categoryId, setCategoryId] = useState<string | null>(
+  const [paidByChoice, setPaidBy] = useState<string | null>(
+    expense?.paidById ?? recurring?.paidById ?? null,
+  );
+  const [categoryTouched, setCategoryTouched] = useState(isEditing);
+  const [categoryIdState, setCategoryIdState] = useState<string | null>(
     expense?.category?.id ?? recurring?.category?.id ?? null,
   );
+  const paidBy = paidByChoice ?? rememberedPayer ?? currentUserId;
+  const categoryId = categoryTouched ? categoryIdState : rememberedCategory ?? categoryIdState;
+  function setCategoryId(next: string | null) {
+    setCategoryTouched(true);
+    setCategoryIdState(next);
+  }
   const [categoryList, setCategoryList] = useState(categories);
   const [splitType, setSplitType] = useState<SplitType>(
     expense?.splitType ?? recurring?.splitType ?? "equal",
@@ -182,19 +216,6 @@ export function ExpenseForm({
     return type !== "equal" || someoneOut;
   });
   const [pending, setPending] = useState(false);
-
-  useEffect(() => {
-    if (isEditing) {
-      return;
-    }
-    const prefs = readPrefs(householdId);
-    if (prefs.paidBy && people.some((person) => person.userId === prefs.paidBy)) {
-      setPaidBy(prefs.paidBy);
-    }
-    if (prefs.categoryId && categories.some((category) => category.id === prefs.categoryId)) {
-      setCategoryId(prefs.categoryId);
-    }
-  }, [categories, householdId, isEditing, people]);
 
   const paidByItems = useMemo(
     () =>
