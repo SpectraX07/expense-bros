@@ -35,6 +35,8 @@ import {
 } from "@/lib/households";
 import { getSiteOrigin } from "@/lib/http";
 import { createClient } from "@/lib/supabase/server";
+import { getSettlementSnapshot } from "@/lib/settlements";
+import { listRecurringExpenses } from "@/lib/recurring";
 import { cn } from "@/lib/utils";
 
 const SHORTCUTS = [
@@ -66,11 +68,13 @@ function MemberRow({
   isYou,
   isAdmin,
   householdId,
+  outstandingNet,
 }: {
   member: HouseholdMember;
   isYou: boolean;
   isAdmin: boolean;
   householdId: string;
+  outstandingNet: number;
 }) {
   return (
     <div
@@ -111,6 +115,7 @@ function MemberRow({
             fullName={member.fullName}
             role={member.role}
             isActive={member.isActive}
+            outstandingNet={outstandingNet}
           />
         ) : null}
       </div>
@@ -127,6 +132,14 @@ export default async function HouseholdPage() {
   const members = await getHouseholdMembers(current.householdId, {
     includeInactive: true,
   });
+  const [snapshot, templates] = await Promise.all([
+    getSettlementSnapshot(current.householdId, null),
+    listRecurringExpenses(current.householdId),
+  ]);
+  const nets = new Map(snapshot.balances.map((row) => [row.userId, row.net]));
+  const hasRentTemplate = templates.some((item) =>
+    item.itemName.toLowerCase().includes("rent"),
+  );
   const origin = await getSiteOrigin();
   const inviteLink = `${origin}/join?code=${current.inviteCode}`;
   const isAdmin = current.role === "admin";
@@ -138,7 +151,7 @@ export default async function HouseholdPage() {
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name")
+    .select("full_name, payment_handle")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -146,7 +159,7 @@ export default async function HouseholdPage() {
     <div className="w-full space-y-8">
       <PageHeader
         title="Household"
-        description="Invite roommates, manage members, and keep settings in one place."
+        description="Invite roommates, manage members, and keep settings in one place. Budgets, rent, and categories live here."
       >
         <Badge variant="secondary">{current.currency}</Badge>
         <Badge variant={isAdmin ? "default" : "outline"}>{current.role}</Badge>
@@ -155,10 +168,25 @@ export default async function HouseholdPage() {
       <div className="grid gap-3 sm:grid-cols-3">
         {SHORTCUTS.map((item) => {
           const Icon = item.icon;
+          const isRecurring = item.href === "/household/recurring";
+          const title =
+            isRecurring && templates.length === 0
+              ? "Add rent"
+              : isRecurring && !hasRentTemplate
+                ? "Add rent"
+                : item.title;
+          const description =
+            isRecurring && templates.length === 0
+              ? "Save rent so you are not retyping it every month"
+              : item.description;
+          const href =
+            isRecurring && !hasRentTemplate
+              ? "/household/recurring/new?item=Rent"
+              : item.href;
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={href}
               className="group rounded-2xl border border-border/80 bg-card/80 p-4 shadow-sm ring-1 ring-foreground/5 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
             >
               <span
@@ -169,8 +197,8 @@ export default async function HouseholdPage() {
               >
                 <Icon className="size-5" />
               </span>
-              <p className="mt-3 font-heading font-semibold">{item.title}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+              <p className="mt-3 font-heading font-semibold">{title}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{description}</p>
             </Link>
           );
         })}
@@ -223,6 +251,7 @@ export default async function HouseholdPage() {
                   isYou={member.userId === user.id}
                   isAdmin={isAdmin}
                   householdId={current.householdId}
+                  outstandingNet={nets.get(member.userId) ?? 0}
                 />
               ))}
               {archivedMembers.length > 0 ? (
@@ -237,6 +266,7 @@ export default async function HouseholdPage() {
                       isYou={member.userId === user.id}
                       isAdmin={isAdmin}
                       householdId={current.householdId}
+                      outstandingNet={nets.get(member.userId) ?? 0}
                     />
                   ))}
                 </div>
@@ -287,7 +317,11 @@ export default async function HouseholdPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ProfileNameForm fullName={profile?.full_name ?? ""} />
+              <ProfileNameForm
+                fullName={profile?.full_name ?? ""}
+                paymentHandle={profile?.payment_handle ?? ""}
+                currency={current.currency}
+              />
             </CardContent>
           </Card>
 

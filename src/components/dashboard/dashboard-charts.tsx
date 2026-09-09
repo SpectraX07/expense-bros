@@ -76,6 +76,11 @@ function ChartEmpty({ message }: { message: string }) {
   );
 }
 
+const hoverCursor = {
+  fill: "color-mix(in oklch, var(--foreground) 8%, transparent)",
+  stroke: "none",
+} as const;
+
 export function DashboardCharts({
   stats,
   currency,
@@ -118,7 +123,10 @@ export function DashboardCharts({
                       <Cell key={`${entry.id ?? "none"}-${entry.name}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip content={<MoneyTooltip currency={currency} />} />
+                  <Tooltip
+                    cursor={hoverCursor}
+                    content={<MoneyTooltip currency={currency} />}
+                  />
                   <Legend
                     verticalAlign="bottom"
                     height={36}
@@ -156,7 +164,10 @@ export function DashboardCharts({
                     tick={{ fontSize: 12 }}
                     className="fill-muted-foreground"
                   />
-                  <Tooltip content={<MoneyTooltip currency={currency} />} />
+                  <Tooltip
+                    cursor={hoverCursor}
+                    content={<MoneyTooltip currency={currency} />}
+                  />
                   <Bar dataKey="amount" name="Paid" radius={[0, 6, 6, 0]} maxBarSize={22}>
                     {payers.map((entry) => (
                       <Cell key={entry.userId} fill={entry.color} />
@@ -193,7 +204,10 @@ export function DashboardCharts({
                       }).format(value)
                     }
                   />
-                  <Tooltip content={<MoneyTooltip currency={currency} />} />
+                  <Tooltip
+                    cursor={hoverCursor}
+                    content={<MoneyTooltip currency={currency} />}
+                  />
                   <Bar dataKey="amount" name="Spent" fill="var(--chart-1)" radius={[6, 6, 0, 0]} maxBarSize={42} />
                 </BarChart>
               </ResponsiveContainer>

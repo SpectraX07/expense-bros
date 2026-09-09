@@ -4,7 +4,7 @@ import { currentPeriod, getAppContext, parsePeriod } from "@/lib/app-context";
 import { getSettlementSnapshot } from "@/lib/settlements";
 import { formatMoney, moneyToCents } from "@/lib/money";
 import { MonthSwitcher } from "@/components/expenses/month-switcher";
-import { MarkPaidButton } from "@/components/settlement/mark-paid-button";
+import { SuggestedTransferCard } from "@/components/settlement/suggested-transfer-card";
 import {
   CancelSettlementButton,
   ConfirmSettlementButton,
@@ -137,39 +137,20 @@ export default async function SettlementPage({
             </p>
           ) : (
             <ul className="space-y-2">
-              {suggested.map((row) => {
-                const canMark = isAdmin || row.fromUserId === user.id;
-                return (
-                  <li
-                    key={`${row.fromUserId}-${row.toUserId}-${row.amount}`}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-medium">
-                        {personLabel(row.fromName, row.fromUserId, user.id)} pays{" "}
-                        {personLabel(row.toName, row.toUserId, user.id)}
-                      </p>
-                      <p className="text-sm tabular-nums text-muted-foreground">
-                        {formatMoney(row.amount, household.currency)}
-                      </p>
-                    </div>
-                    {canMark ? (
-                      <MarkPaidButton
-                        householdId={household.householdId}
-                        fromUserId={row.fromUserId}
-                        toUserId={row.toUserId}
-                        toName={row.toName}
-                        amount={row.amount}
-                        year={stamp.year}
-                        month={stamp.month}
-                        currency={household.currency}
-                      />
-                    ) : (
-                      <p className="text-xs text-muted-foreground">Waiting on them to pay</p>
-                    )}
-                  </li>
-                );
-              })}
+              {suggested.map((row) => (
+                <SuggestedTransferCard
+                  key={`${row.fromUserId}-${row.toUserId}-${row.amount}`}
+                  row={row}
+                  currentUserId={user.id}
+                  isAdmin={isAdmin}
+                  householdId={household.householdId}
+                  householdName={household.name}
+                  currency={household.currency}
+                  year={stamp.year}
+                  month={stamp.month}
+                  allTime={allTime}
+                />
+              ))}
             </ul>
           )}
         </CardContent>
@@ -178,10 +159,55 @@ export default async function SettlementPage({
       <Card>
         <CardHeader>
           <CardTitle>Household balances</CardTitle>
-          <CardDescription>Paid vs fair share, after confirmed settlements.</CardDescription>
+          <CardDescription>
+            Paid vs fair share, after confirmed settlements.
+            {allTime
+              ? " Payments you mark here count toward this running balance and are recorded against this calendar month."
+              : ""}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <div className="space-y-2 md:hidden">
+            {balances.map((row) => (
+              <div key={row.userId} className="rounded-xl border border-border px-3 py-3">
+                <p className="font-medium">
+                  {personLabel(row.fullName, row.userId, user.id)}
+                  {row.isActive ? null : (
+                    <Badge variant="secondary" className="ml-2">
+                      Former
+                    </Badge>
+                  )}
+                </p>
+                <dl className="mt-2 grid grid-cols-3 gap-2 text-sm">
+                  <div>
+                    <dt className="text-muted-foreground">Paid</dt>
+                    <dd className="tabular-nums">{formatMoney(row.paid, household.currency)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Share</dt>
+                    <dd className="tabular-nums">{formatMoney(row.fairShare, household.currency)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Net</dt>
+                    <dd
+                      className={cn(
+                        "font-medium tabular-nums",
+                        moneyToCents(row.net) > 0
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : moneyToCents(row.net) < 0
+                            ? "text-destructive"
+                            : "text-muted-foreground",
+                      )}
+                    >
+                      {moneyToCents(row.net) > 0 ? "+" : ""}
+                      {formatMoney(row.net, household.currency)}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[36rem] text-sm">
               <thead className="text-left text-muted-foreground">
                 <tr className="border-b border-border">

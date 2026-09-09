@@ -6,6 +6,7 @@ import {
 } from "@/lib/households";
 import { AppShell } from "@/components/app/app-shell";
 import { createClient } from "@/lib/supabase/server";
+import { getNavAttention } from "@/lib/nav-attention";
 
 export default async function AppLayout({
   children,
@@ -24,11 +25,10 @@ export default async function AppLayout({
     memberships.find((item) => item.householdId === currentId) ?? memberships[0];
 
   const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name")
-    .eq("id", user.id)
-    .maybeSingle();
+  const [{ data: profile }, attention] = await Promise.all([
+    supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+    getNavAttention(currentHousehold.householdId, user.id),
+  ]);
 
   return (
     <AppShell
@@ -36,6 +36,8 @@ export default async function AppLayout({
       displayName={profile?.full_name || user.email?.split("@")[0] || "You"}
       memberships={memberships}
       currentHousehold={currentHousehold}
+      dashboardBadge={attention.dueRecurringCount}
+      settlementBadge={attention.settlementCount}
     >
       {children}
     </AppShell>

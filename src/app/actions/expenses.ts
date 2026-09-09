@@ -28,6 +28,8 @@ function revalidateExpensePaths() {
   revalidatePath("/household/categories");
   revalidatePath("/household/recurring");
   revalidatePath("/household/budgets");
+  revalidatePath("/settlement");
+  revalidatePath("/", "layout");
 }
 
 export async function saveExpenseAction(input: unknown): Promise<ActionResult> {

@@ -51,6 +51,12 @@ export const updateProfileSchema = z.object({
     .trim()
     .min(1, "Name is required")
     .max(80, "Name is too long"),
+  paymentHandle: z
+    .string()
+    .trim()
+    .max(80, "Payment details are too long")
+    .optional()
+    .nullable(),
 });
 
 export const updateHouseholdSettingsSchema = createHouseholdSchema.extend({

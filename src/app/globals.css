@@ -74,6 +74,7 @@
   --chart-4: oklch(0.72 0.12 220);
   --chart-5: oklch(0.68 0.14 35);
   --radius: 0.85rem;
+  --autofill-bg: #fbfaf6;
   --sidebar: oklch(0.23 0.048 260);
   --sidebar-foreground: oklch(0.97 0.012 92);
   --sidebar-primary: oklch(0.81 0.155 85);
@@ -109,6 +110,7 @@
   --chart-3: oklch(0.74 0.15 155);
   --chart-4: oklch(0.76 0.11 220);
   --chart-5: oklch(0.72 0.13 35);
+  --autofill-bg: #313948;
   --sidebar: oklch(0.155 0.042 260);
   --sidebar-foreground: oklch(0.97 0.012 92);
   --sidebar-primary: oklch(0.84 0.16 85);
@@ -221,12 +223,20 @@
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
+  input:-webkit-autofill:active,
+  input:-internal-autofill-selected,
+  input:-internal-autofill-previewed,
   textarea:-webkit-autofill,
-  select:-webkit-autofill {
-    -webkit-text-fill-color: var(--foreground);
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  select:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--foreground) !important;
     caret-color: var(--foreground);
-    box-shadow: 0 0 0 1000px var(--card) inset;
-    transition: background-color 99999s ease-out;
+    background-color: var(--autofill-bg) !important;
+    background-image: none !important;
+    box-shadow: 0 0 0 1000px var(--autofill-bg) inset !important;
+    -webkit-box-shadow: 0 0 0 1000px var(--autofill-bg) inset !important;
+    transition: background-color 99999s ease-out 0s, color 99999s ease-out 0s;
   }
 
   ::-webkit-scrollbar {

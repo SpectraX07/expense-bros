@@ -15,6 +15,8 @@ import {
   publicErrorMessage,
   type ActionResult,
 } from "@/lib/actions";
+import { getSettlementSnapshot } from "@/lib/settlements";
+import { moneyToCents } from "@/lib/money";
 import {
   createHouseholdSchema,
   householdIdSchema,
@@ -61,7 +63,7 @@ export async function createHousehold(input: unknown): Promise<ActionResult> {
   }
 
   await setCurrentHouseholdCookie(household.id);
-  redirect("/dashboard");
+  redirect("/household/setup");
 }
 
 export async function joinHousehold(input: unknown): Promise<ActionResult> {
@@ -156,6 +158,19 @@ export async function setMemberActiveAction(
   }
 
   const supabase = await createClient();
+
+  if (!parsed.data.isActive) {
+    const snapshot = await getSettlementSnapshot(parsed.data.householdId, null);
+    const balance = snapshot.balances.find((row) => row.userId === parsed.data.userId);
+    if (balance && moneyToCents(balance.net) !== 0) {
+      return {
+        ok: false,
+        error:
+          "Settle up first. This roommate still has a running balance — open Settlement before archiving.",
+      };
+    }
+  }
+
   const { error } = await supabase.rpc("set_member_active", {
     p_household_id: parsed.data.householdId,
     p_user_id: parsed.data.userId,
@@ -246,7 +261,10 @@ export async function updateDisplayNameAction(
   const supabase = await createClient();
   const { error } = await supabase
     .from("profiles")
-    .update({ full_name: parsed.data.fullName })
+    .update({
+      full_name: parsed.data.fullName,
+      payment_handle: parsed.data.paymentHandle?.trim() || null,
+    })
     .eq("id", user.id);
 
   if (error) {
@@ -254,5 +272,5 @@ export async function updateDisplayNameAction(
   }
 
   revalidateHouseholdSurfaces();
-  return { ok: true, message: "Display name updated." };
+  return { ok: true, message: "Profile updated." };
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { MoreHorizontalIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,10 +21,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  setMemberActiveAction,
-  setMemberRoleAction,
-} from "@/app/actions/households";
+import { setMemberActiveAction, setMemberRoleAction } from "@/app/actions/households";
+import { moneyToCents } from "@/lib/money";
 import type { Enums } from "@/lib/supabase/database.types";
 
 export function MemberRowActions({
@@ -32,17 +31,20 @@ export function MemberRowActions({
   fullName,
   role,
   isActive,
+  outstandingNet = 0,
 }: {
   householdId: string;
   userId: string;
   fullName: string;
   role: Enums<"member_role">;
   isActive: boolean;
+  outstandingNet?: number;
 }) {
   const [pending, setPending] = useState(false);
   const [confirm, setConfirm] = useState<"archive" | "restore" | "demote" | null>(
     null,
   );
+  const hasBalance = moneyToCents(outstandingNet) !== 0;
 
   async function onSetActive(isActiveNext: boolean) {
     setPending(true);
@@ -147,15 +149,22 @@ export function MemberRowActions({
                   : `Remove admin from ${fullName}?`}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {confirm === "archive"
-                ? "They will leave this household. Past expenses stay in history, and you can restore them later."
-                : confirm === "restore"
-                  ? "They will become an active roommate again and can log expenses."
-                  : "They will stay in the household as a member. You can make them admin again later."}
+              {confirm === "archive" && hasBalance
+                ? `${fullName} still has a running balance. Settle up first so you do not bury an unpaid amount.`
+                : confirm === "archive"
+                  ? "They will leave this household. Past expenses stay in history, and you can restore them later."
+                  : confirm === "restore"
+                    ? "They will become an active roommate again and can log expenses."
+                    : "They will stay in the household as a member. You can make them admin again later."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
+            {confirm === "archive" && hasBalance ? (
+              <AlertDialogAction render={<Link href="/settlement?scope=all" />}>
+                Settle up first
+              </AlertDialogAction>
+            ) : (
             <AlertDialogAction
               variant={confirm === "archive" ? "destructive" : "default"}
               disabled={pending}
@@ -175,6 +184,7 @@ export function MemberRowActions({
                   ? "Restore"
                   : "Remove admin"}
             </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

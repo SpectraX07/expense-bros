@@ -59,16 +59,24 @@ export function AppShell({
   displayName,
   memberships,
   currentHousehold,
+  dashboardBadge = 0,
+  settlementBadge = 0,
   children,
 }: {
   user: AuthUser;
   displayName: string;
   memberships: HouseholdMembership[];
   currentHousehold: HouseholdMembership;
+  dashboardBadge?: number;
+  settlementBadge?: number;
   children: ReactNode;
 }) {
   const pathname = usePathname();
   const initials = displayName.slice(0, 1).toUpperCase();
+  const badges: Record<string, number> = {
+    "/dashboard": dashboardBadge,
+    "/settlement": settlementBadge,
+  };
 
   return (
     <div className="min-h-full">
@@ -88,6 +96,7 @@ export function AppShell({
             const active = navIsActive(item.href, pathname);
             const Icon = item.icon;
             const emphasize = item.href === "/expenses/new";
+            const badge = badges[item.href] ?? 0;
             return (
               <Link
                 key={item.href}
@@ -97,7 +106,14 @@ export function AppShell({
                   sidebarLinkClass(active, emphasize),
                 )}
               >
-                <Icon className="size-4" />
+                <span className="relative">
+                  <Icon className="size-4" />
+                  {badge > 0 ? (
+                    <span className="absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
+                      {badge > 9 ? "9+" : badge}
+                    </span>
+                  ) : null}
+                </span>
                 {item.label}
               </Link>
             );
@@ -175,6 +191,7 @@ export function AppShell({
             const Icon = item.icon;
             const label = "shortLabel" in item ? item.shortLabel : item.label;
             const add = item.href === "/expenses/new";
+            const badge = badges[item.href] ?? 0;
             return (
               <li key={item.href}>
                 <Link
@@ -190,12 +207,17 @@ export function AppShell({
                 >
                   <span
                     className={cn(
-                      "inline-flex items-center justify-center rounded-xl",
+                      "relative inline-flex items-center justify-center rounded-xl",
                       add && "size-9 bg-primary text-primary-foreground shadow-md shadow-primary/30",
                       !add && active && "text-primary",
                     )}
                   >
                     <Icon className={cn("size-5", add && "size-5")} />
+                    {badge > 0 ? (
+                      <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
+                        {badge > 9 ? "9+" : badge}
+                      </span>
+                    ) : null}
                   </span>
                   <span className={cn(add && "text-foreground")}>{label}</span>
                 </Link>

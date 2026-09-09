@@ -16,6 +16,7 @@ import {
 function revalidateSettlementPaths() {
   revalidatePath("/settlement");
   revalidatePath("/dashboard");
+  revalidatePath("/", "layout");
 }
 
 async function getMembership(householdId: string, userId: string) {

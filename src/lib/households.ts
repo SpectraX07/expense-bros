@@ -3,6 +3,8 @@ import { HOUSEHOLD_COOKIE } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import type { Enums } from "@/lib/supabase/database.types";
 
+export { formatInviteCode } from "@/lib/invite-code";
+
 export type HouseholdMembership = {
   householdId: string;
   name: string;
@@ -15,6 +17,7 @@ export type HouseholdMember = {
   userId: string;
   fullName: string;
   avatarUrl: string | null;
+  paymentHandle: string | null;
   role: Enums<"member_role">;
   joinedAt: string;
   isActive: boolean;
@@ -37,7 +40,11 @@ type MemberQueryRow = {
   role: Enums<"member_role">;
   joined_at: string;
   is_active: boolean;
-  profiles: { full_name: string; avatar_url: string | null } | null;
+  profiles: {
+    full_name: string;
+    avatar_url: string | null;
+    payment_handle: string | null;
+  } | null;
 };
 
 export async function getHouseholdMemberships(userId: string) {
@@ -77,7 +84,7 @@ export async function getHouseholdMembers(
   const supabase = await createClient();
   let query = supabase
     .from("household_members")
-    .select("user_id, role, joined_at, is_active, profiles(full_name, avatar_url)")
+    .select("user_id, role, joined_at, is_active, profiles(full_name, avatar_url, payment_handle)")
     .eq("household_id", householdId);
 
   if (!options?.includeInactive) {
@@ -96,6 +103,7 @@ export async function getHouseholdMembers(
     userId: row.user_id,
     fullName: row.profiles?.full_name || "Roommate",
     avatarUrl: row.profiles?.avatar_url ?? null,
+    paymentHandle: row.profiles?.payment_handle ?? null,
     role: row.role,
     joinedAt: row.joined_at,
     isActive: row.is_active,
@@ -125,12 +133,4 @@ export async function setCurrentHouseholdCookie(householdId: string) {
     secure: process.env.NODE_ENV === "production",
     maxAge: 60 * 60 * 24 * 365,
   });
-}
-
-export function formatInviteCode(code: string) {
-  const compact = code.replace(/[^A-Z0-9]/gi, "").toUpperCase();
-  if (compact.length === 8) {
-    return `${compact.slice(0, 4)}-${compact.slice(4)}`;
-  }
-  return compact;
 }

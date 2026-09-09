@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +30,16 @@ export function QuickAddExpense({
   currentUserId: string;
   next: string;
 }) {
+  const [mobile, setMobile] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const update = () => setMobile(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
   return (
     <Sheet>
       <SheetTrigger render={<Button />}>
@@ -36,8 +47,8 @@ export function QuickAddExpense({
         Add expense
       </SheetTrigger>
       <SheetContent
-        side="right"
-        className="w-full overflow-y-auto data-[side=right]:w-full data-[side=right]:sm:max-w-lg"
+        side={mobile ? "bottom" : "right"}
+        className="max-h-[92vh] w-full overflow-y-auto data-[side=right]:w-full data-[side=right]:sm:max-w-lg"
       >
         <SheetHeader>
           <SheetTitle>Add expense</SheetTitle>

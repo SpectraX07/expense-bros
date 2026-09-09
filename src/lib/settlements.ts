@@ -37,6 +37,8 @@ export type SettlementRecord = {
 export type SuggestedTransfer = SettlementTransfer & {
   fromName: string;
   toName: string;
+  fromPaymentHandle: string | null;
+  toPaymentHandle: string | null;
 };
 
 type BalanceRow = {
@@ -95,6 +97,17 @@ export async function getSettlementSnapshot(
   }));
 
   const names = new Map(balances.map((row) => [row.userId, row.fullName]));
+  const handles = new Map<string, string | null>();
+  const userIds = balances.map((row) => row.userId);
+  if (userIds.length > 0) {
+    const { data: handleRows } = await supabase
+      .from("profiles")
+      .select("id, payment_handle")
+      .in("id", userIds);
+    for (const row of handleRows ?? []) {
+      handles.set(row.id, row.payment_handle);
+    }
+  }
 
   let settlementQuery = supabase
     .from("settlements")
@@ -143,6 +156,8 @@ export async function getSettlementSnapshot(
     ...row,
     fromName: names.get(row.fromUserId) ?? "Roommate",
     toName: names.get(row.toUserId) ?? "Roommate",
+    fromPaymentHandle: handles.get(row.fromUserId) ?? null,
+    toPaymentHandle: handles.get(row.toUserId) ?? null,
   })) satisfies SuggestedTransfer[];
 
   return { balances, pending, confirmed, suggested };

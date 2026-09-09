@@ -17,6 +17,7 @@ import {
 import { rotateInviteCodeAction } from "@/app/actions/households";
 
 export function RotateInviteButton({ householdId }: { householdId: string }) {
+  const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
 
   async function onRotate() {
@@ -28,13 +29,14 @@ export function RotateInviteButton({ householdId }: { householdId: string }) {
         return;
       }
       toast.success(result.message);
+      setOpen(false);
     } finally {
       setPending(false);
     }
   }
 
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger render={<Button size="sm" variant="outline" />}>
         Rotate
       </AlertDialogTrigger>

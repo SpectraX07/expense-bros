@@ -30,6 +30,7 @@ export function MarkPaidButton({
   year,
   month,
   currency,
+  allTime = false,
 }: {
   householdId: string;
   fromUserId: string;
@@ -39,6 +40,7 @@ export function MarkPaidButton({
   year: number;
   month: number;
   currency: string;
+  allTime?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
@@ -89,9 +91,12 @@ export function MarkPaidButton({
       <AlertDialogTrigger render={<Button size="sm" />}>Mark paid</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Mark as paid</AlertDialogTitle>
+          <AlertDialogTitle>{allTime ? "Record a payment" : "Mark as paid"}</AlertDialogTitle>
           <AlertDialogDescription>
             {toName} will need to confirm they received {formatMoney(toMoneyNumber(value) || amount, currency)}.
+            {allTime
+              ? " This counts toward the running balance and is recorded against this calendar month."
+              : ""}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="space-y-3">

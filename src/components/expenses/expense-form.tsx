@@ -78,6 +78,7 @@ export function ExpenseForm({
   next,
   mode = "expense",
   recurring,
+  defaultItemName,
 }: {
   householdId: string;
   currency: string;
@@ -88,6 +89,7 @@ export function ExpenseForm({
   next?: string;
   mode?: "expense" | "recurring";
   recurring?: RecurringRecord;
+  defaultItemName?: string;
 }) {
   const isEditing = Boolean(expense || recurring);
   const people = useMemo(() => {
@@ -102,6 +104,7 @@ export function ExpenseForm({
           role: "member",
           joinedAt: expense?.expenseDate ?? recurring?.nextRunDate ?? new Date().toISOString(),
           isActive: false,
+          paymentHandle: null,
         });
       }
     }
@@ -109,7 +112,9 @@ export function ExpenseForm({
   }, [members, expense, recurring]);
   const existingSplits = expense?.splits ?? recurring?.splits ?? [];
 
-  const [itemName, setItemName] = useState(expense?.itemName ?? recurring?.itemName ?? "");
+  const [itemName, setItemName] = useState(
+    expense?.itemName ?? recurring?.itemName ?? defaultItemName ?? "",
+  );
   const [amount, setAmount] = useState(
     expense ? String(expense.amount) : recurring ? String(recurring.amount) : "",
   );
@@ -456,28 +461,33 @@ export function ExpenseForm({
                   return (
                     <div
                       key={person.userId}
-                      className="grid grid-cols-[auto_auto_1fr_auto] items-center gap-2 rounded-lg px-1 py-1.5 sm:grid-cols-[auto_auto_1fr_7rem_6.5rem]"
+                      className="flex flex-col gap-2 rounded-lg border border-border/70 p-2 sm:grid sm:grid-cols-[auto_auto_1fr_7rem_6.5rem] sm:items-center sm:gap-2 sm:border-0 sm:p-0 sm:py-1.5"
                     >
-                      <Checkbox
-                        checked={isIncluded}
-                        onCheckedChange={(checked) => {
-                          setIncluded((current) => ({
-                            ...current,
-                            [person.userId]: checked === true,
-                          }));
-                        }}
-                        aria-label={`Include ${person.fullName}`}
-                      />
-                      <Avatar size="sm">
-                        {person.avatarUrl ? (
-                          <AvatarImage src={person.avatarUrl} alt={person.fullName} />
-                        ) : null}
-                        <AvatarFallback>{person.fullName.slice(0, 1).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <p className="truncate text-sm font-medium">
-                        {person.fullName}
-                        {person.userId === currentUserId ? " (you)" : ""}
-                      </p>
+                      <div className="flex items-center gap-2 sm:contents">
+                        <Checkbox
+                          checked={isIncluded}
+                          onCheckedChange={(checked) => {
+                            setIncluded((current) => ({
+                              ...current,
+                              [person.userId]: checked === true,
+                            }));
+                          }}
+                          aria-label={`Include ${person.fullName}`}
+                        />
+                        <Avatar size="sm">
+                          {person.avatarUrl ? (
+                            <AvatarImage src={person.avatarUrl} alt={person.fullName} />
+                          ) : null}
+                          <AvatarFallback>{person.fullName.slice(0, 1).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <p className="min-w-0 flex-1 truncate text-sm font-medium">
+                          {person.fullName}
+                          {person.userId === currentUserId ? " (you)" : ""}
+                        </p>
+                        <p className="text-right text-sm tabular-nums text-muted-foreground sm:hidden">
+                          {formatMoney(split?.shareAmount ?? 0, currency)}
+                        </p>
+                      </div>
                       {splitType === "percentage" ? (
                         <Input
                           type="number"
@@ -490,7 +500,6 @@ export function ExpenseForm({
                             setPercents((current) => ({ ...current, [person.userId]: nextValue }));
                           }}
                           aria-label={`${person.fullName} percent`}
-                          className="col-span-4 sm:col-span-1"
                         />
                       ) : null}
                       {splitType === "shares" ? (
@@ -505,7 +514,6 @@ export function ExpenseForm({
                             setShares((current) => ({ ...current, [person.userId]: nextValue }));
                           }}
                           aria-label={`${person.fullName} shares`}
-                          className="col-span-4 sm:col-span-1"
                         />
                       ) : null}
                       {splitType === "custom_amount" ? (
@@ -523,10 +531,9 @@ export function ExpenseForm({
                             }));
                           }}
                           aria-label={`${person.fullName} amount`}
-                          className="col-span-4 sm:col-span-1"
                         />
                       ) : null}
-                      <p className="text-right text-sm tabular-nums text-muted-foreground">
+                      <p className="hidden text-right text-sm tabular-nums text-muted-foreground sm:block">
                         {formatMoney(split?.shareAmount ?? 0, currency)}
                       </p>
                     </div>

@@ -15,6 +15,9 @@ export type ExpenseRecord = {
   paidByName: string;
   category: ExpenseCategory | null;
   createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  editedByName: string | null;
   splits: {
     userId: string;
     shareAmount: number;
@@ -31,6 +34,9 @@ type ExpenseQueryRow = {
   note: string | null;
   paid_by: string;
   created_by: string;
+  created_at: string;
+  updated_at: string;
+  edited_by: string | null;
   categories: {
     id: string;
     name: string;
@@ -39,8 +45,26 @@ type ExpenseQueryRow = {
     household_id: string | null;
     is_archived: boolean;
   } | null;
-  payer: { id: string; full_name: string } | null;
+  payer: { id: string; full_name: string } | { id: string; full_name: string }[] | null;
+  editor: { full_name: string } | { full_name: string }[] | null;
+  expense_splits?: {
+    user_id: string;
+    share_amount: number | string;
+    is_included: boolean;
+  }[];
 };
+
+function relationName(
+  value: { full_name: string } | { full_name: string }[] | null | undefined,
+) {
+  if (!value) {
+    return null;
+  }
+  if (Array.isArray(value)) {
+    return value[0]?.full_name ?? null;
+  }
+  return value.full_name;
+}
 
 export async function listCategories(householdId: string, options?: { includeArchived?: boolean }) {
   const supabase = await createClient();
@@ -91,7 +115,7 @@ export async function listExpenses(options: {
   let request = supabase
     .from("expenses")
     .select(
-      "id, item_name, amount, expense_date, split_type, note, paid_by, created_by, categories(id, name, icon, color, household_id, is_archived), payer:profiles!expenses_paid_by_fkey(id, full_name)",
+      "id, item_name, amount, expense_date, split_type, note, paid_by, created_by, created_at, updated_at, edited_by, categories(id, name, icon, color, household_id, is_archived), payer:profiles!expenses_paid_by_fkey(id, full_name), editor:profiles!expenses_edited_by_fkey(full_name), expense_splits(user_id, share_amount, is_included)",
     )
     .eq("household_id", options.householdId)
     .eq("year", options.year)
@@ -122,10 +146,17 @@ export async function listExpenses(options: {
     splitType: row.split_type,
     note: row.note,
     paidById: row.paid_by,
-    paidByName: row.payer?.full_name || "Roommate",
+    paidByName: relationName(row.payer) || "Roommate",
     category: row.categories,
     createdBy: row.created_by,
-    splits: [],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    editedByName: row.edited_by ? relationName(row.editor) || "Someone" : null,
+    splits: (row.expense_splits ?? []).map((split) => ({
+      userId: split.user_id,
+      shareAmount: toMoneyNumber(split.share_amount),
+      isIncluded: split.is_included,
+    })),
   })) satisfies ExpenseRecord[];
 }
 
@@ -134,7 +165,7 @@ export async function getExpense(householdId: string, expenseId: string) {
   const { data, error } = await supabase
     .from("expenses")
     .select(
-      "id, item_name, amount, expense_date, split_type, note, paid_by, created_by, categories(id, name, icon, color, household_id, is_archived), payer:profiles!expenses_paid_by_fkey(id, full_name), expense_splits(user_id, share_amount, is_included)",
+      "id, item_name, amount, expense_date, split_type, note, paid_by, created_by, created_at, updated_at, edited_by, categories(id, name, icon, color, household_id, is_archived), payer:profiles!expenses_paid_by_fkey(id, full_name), editor:profiles!expenses_edited_by_fkey(full_name), expense_splits(user_id, share_amount, is_included)",
     )
     .eq("id", expenseId)
     .eq("household_id", householdId)
@@ -147,13 +178,7 @@ export async function getExpense(householdId: string, expenseId: string) {
     return null;
   }
 
-  const row = data as ExpenseQueryRow & {
-    expense_splits: {
-      user_id: string;
-      share_amount: number | string;
-      is_included: boolean;
-    }[];
-  };
+  const row = data as ExpenseQueryRow;
 
   return {
     id: row.id,
@@ -163,9 +188,12 @@ export async function getExpense(householdId: string, expenseId: string) {
     splitType: row.split_type,
     note: row.note,
     paidById: row.paid_by,
-    paidByName: row.payer?.full_name || "Roommate",
+    paidByName: relationName(row.payer) || "Roommate",
     category: row.categories,
     createdBy: row.created_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    editedByName: row.edited_by ? relationName(row.editor) || "Someone" : null,
     splits: (row.expense_splits ?? []).map((split) => ({
       userId: split.user_id,
       shareAmount: toMoneyNumber(split.share_amount),

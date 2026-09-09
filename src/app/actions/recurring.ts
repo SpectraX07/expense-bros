@@ -10,7 +10,8 @@ import {
   publicErrorMessage,
   type ActionResult,
 } from "@/lib/actions";
-import { splitsAreValid } from "@/lib/splits";
+import { splitsAreValid, computeSplits } from "@/lib/splits";
+import { getHouseholdMembers } from "@/lib/households";
 import {
   recurringIdSchema,
   saveRecurringSchema,
@@ -23,11 +24,18 @@ const toggleRecurringSchema = z.object({
   active: z.boolean(),
 });
 
+const createRentTemplateSchema = z.object({
+  householdId: z.uuid(),
+  amount: z.number().positive("Enter the rent amount"),
+  nextRunDate: z.iso.date(),
+});
+
 function revalidateRecurringPaths() {
   revalidatePath("/household/recurring");
   revalidatePath("/dashboard");
   revalidatePath("/history");
   revalidatePath("/settlement");
+  revalidatePath("/", "layout");
 }
 
 function revalidateBudgetPaths() {
@@ -78,6 +86,62 @@ export async function saveRecurringAction(input: unknown): Promise<ActionResult>
 
   revalidateRecurringPaths();
   redirect("/household/recurring");
+}
+
+export async function createRentTemplateAction(input: unknown): Promise<ActionResult> {
+  const user = await requireAuthUser();
+  const parsed = createRentTemplateSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: firstZodError(parsed.error) };
+  }
+
+  const members = await getHouseholdMembers(parsed.data.householdId);
+  if (members.length === 0) {
+    return { ok: false, error: "No active roommates to split rent with." };
+  }
+
+  const computed = computeSplits(
+    parsed.data.amount,
+    "equal",
+    members.map((member) => ({
+      userId: member.userId,
+      included: true,
+      percent: 0,
+      shares: 1,
+      customAmount: 0,
+    })),
+  );
+
+  if (!splitsAreValid(parsed.data.amount, computed)) {
+    return { ok: false, error: "Could not split rent evenly. Check the amount." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("save_recurring_expense", {
+    p_household_id: parsed.data.householdId,
+    p_paid_by: user.id,
+    p_item_name: "Rent",
+    p_amount: parsed.data.amount,
+    p_split_type: "equal",
+    p_splits: computed.map((split) => ({
+      user_id: split.userId,
+      share_amount: split.shareAmount,
+      is_included: split.included,
+    })) as Json,
+    p_frequency: "monthly",
+    p_next_run_date: parsed.data.nextRunDate,
+    p_category_id: null,
+    p_note: null,
+    p_id: null,
+    p_active: true,
+  });
+
+  if (error) {
+    return { ok: false, error: publicErrorMessage(error.message) };
+  }
+
+  revalidateRecurringPaths();
+  return { ok: true, message: "Rent template saved. Confirm it from the dashboard when due." };
 }
 
 export async function applyRecurringAction(input: unknown): Promise<ActionResult> {

@@ -5,12 +5,15 @@ import { listCategories } from "@/lib/expenses";
 import { getDashboardStats } from "@/lib/dashboard";
 import { budgetStatus } from "@/lib/budget-status";
 import { listDueRecurringExpenses } from "@/lib/recurring";
+import { getSettlementSnapshot } from "@/lib/settlements";
 import { formatMoney } from "@/lib/money";
 import { MonthSwitcher } from "@/components/expenses/month-switcher";
 import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
 import { OverallBudgetForm } from "@/components/dashboard/overall-budget-form";
 import { QuickAddExpense } from "@/components/dashboard/quick-add-expense";
 import { RecurringDueActions } from "@/components/recurring/recurring-due-actions";
+import { YouCard } from "@/components/dashboard/you-card";
+import { PendingConfirmCard } from "@/components/dashboard/pending-confirm-card";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -49,11 +52,15 @@ export default async function DashboardPage({
   const params = await searchParams;
   const { user, household, members, isAdmin } = await getAppContext();
   const { year, month } = parsePeriod(params.year, params.month);
-  const [{ picker }, stats, dueRecurring] = await Promise.all([
+  const [{ picker }, stats, dueRecurring, snapshot] = await Promise.all([
     listCategories(household.householdId),
     getDashboardStats(household.householdId, year, month),
     listDueRecurringExpenses(household.householdId, format(new Date(), "yyyy-MM-dd")),
+    getSettlementSnapshot(household.householdId, { year, month }),
   ]);
+
+  const pendingToConfirm = snapshot.pending.filter((row) => row.toUserId === user.id);
+  const mine = snapshot.balances.find((row) => row.userId === user.id);
 
   const status = budgetStatus(stats.totalSpent, stats.overallBudget);
   const remaining =
@@ -84,12 +91,22 @@ export default async function DashboardPage({
         />
       </PageHeader>
 
+      <YouCard
+        net={mine?.net ?? 0}
+        currency={household.currency}
+        currentUserId={user.id}
+        suggested={snapshot.suggested}
+        pendingToConfirm={pendingToConfirm}
+        year={year}
+        month={month}
+      />
+
       {dueRecurring.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>Due recurring expenses</CardTitle>
+            <CardTitle>Rent and repeating bills</CardTitle>
             <CardDescription>
-              Confirm rent and other templates to add them for the due date, or skip this run.
+              Rent is due — add this month or skip. Templates never post a bill on their own.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -97,6 +114,13 @@ export default async function DashboardPage({
           </CardContent>
         </Card>
       ) : null}
+
+      <PendingConfirmCard
+        items={pendingToConfirm}
+        currency={household.currency}
+        currentUserId={user.id}
+        isAdmin={isAdmin}
+      />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <Card className="overflow-hidden">

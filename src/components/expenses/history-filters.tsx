@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -28,8 +28,10 @@ export function HistoryFilters({
   categories: { id: string; name: string }[];
   members: { userId: string; fullName: string }[];
 }) {
-  const [category, setCategory] = useState(categoryId || "all");
-  const [payer, setPayer] = useState(payerId || "all");
+  const router = useRouter();
+  const [search, setSearch] = useState(query);
+  const [, startTransition] = useTransition();
+  const debounceRef = useRef<number | null>(null);
 
   const categoryItems = {
     all: "All categories",
@@ -40,19 +42,61 @@ export function HistoryFilters({
     ...Object.fromEntries(members.map((member) => [member.userId, member.fullName])),
   };
 
+  function navigate(next: { q?: string; category?: string; payer?: string }) {
+    const params = new URLSearchParams();
+    params.set("year", String(year));
+    params.set("month", String(month));
+    const q = next.q ?? search;
+    const category = next.category ?? categoryId;
+    const payer = next.payer ?? payerId;
+    if (q.trim()) {
+      params.set("q", q.trim());
+    }
+    if (category) {
+      params.set("category", category);
+    }
+    if (payer) {
+      params.set("payer", payer);
+    }
+    startTransition(() => {
+      router.replace(`/history?${params.toString()}`);
+    });
+  }
+
+  useEffect(() => {
+    setSearch(query);
+  }, [query]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        window.clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <form className="grid gap-2 sm:grid-cols-4" method="get">
-      <input type="hidden" name="year" value={year} />
-      <input type="hidden" name="month" value={month} />
-      <input type="hidden" name="category" value={category === "all" ? "" : category} />
-      <input type="hidden" name="payer" value={payer === "all" ? "" : payer} />
-      <Input name="q" defaultValue={query} placeholder="Search items" />
+    <div className="grid gap-2 sm:grid-cols-3">
+      <Input
+        value={search}
+        placeholder="Search items"
+        onChange={(event) => {
+          const value = event.target.value;
+          setSearch(value);
+          if (debounceRef.current) {
+            window.clearTimeout(debounceRef.current);
+          }
+          debounceRef.current = window.setTimeout(() => {
+            navigate({ q: value });
+          }, 300);
+        }}
+      />
       <Select
-        value={category}
+        value={categoryId || "all"}
         items={categoryItems}
         onValueChange={(value) => {
           if (typeof value === "string") {
-            setCategory(value);
+            navigate({ category: value === "all" ? "" : value });
           }
         }}
       >
@@ -69,11 +113,11 @@ export function HistoryFilters({
         </SelectContent>
       </Select>
       <Select
-        value={payer}
+        value={payerId || "all"}
         items={payerItems}
         onValueChange={(value) => {
           if (typeof value === "string") {
-            setPayer(value);
+            navigate({ payer: value === "all" ? "" : value });
           }
         }}
       >
@@ -89,9 +133,6 @@ export function HistoryFilters({
           ))}
         </SelectContent>
       </Select>
-      <Button type="submit" variant="outline">
-        Apply
-      </Button>
-    </form>
+    </div>
   );
 }
