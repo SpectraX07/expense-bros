@@ -25,10 +25,10 @@ export function HouseholdSwitcher({
   const showSwitcher = memberships.length > 1;
   const sidebar = variant === "sidebar";
   const frame = cn(
-    "flex w-full min-w-0 items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium outline-none",
+    "flex min-h-10 w-full min-w-0 items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium outline-none",
     sidebar
       ? "border border-white/10 bg-white/5 text-sidebar-foreground"
-      : "max-w-48 border border-border bg-card/80",
+      : "max-w-[min(14rem,46vw)] border border-border bg-card/80",
     showSwitcher &&
       "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
   );

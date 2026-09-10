@@ -218,7 +218,7 @@ export default async function HouseholdPage() {
                 <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
                   Invite code
                 </p>
-                <p className="mt-2 font-mono text-3xl font-semibold tracking-[0.18em]">
+                <p className="mt-2 font-mono text-2xl font-semibold tracking-[0.12em] break-all sm:text-3xl sm:tracking-[0.18em]">
                   {formatInviteCode(current.inviteCode)}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">

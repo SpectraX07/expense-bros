@@ -70,10 +70,15 @@ function MoneyTooltip({
 
 function ChartEmpty({ message }: { message: string }) {
   return (
-    <div className="flex h-72 items-center justify-center px-4 text-center text-sm text-muted-foreground">
+    <div className="flex h-64 items-center justify-center px-4 text-center text-sm text-muted-foreground sm:h-72">
       {message}
     </div>
   );
+}
+
+/** Keeps the category axis narrow enough to leave room for bars on a phone. */
+function shortenName(value: string) {
+  return value.length > 12 ? `${value.slice(0, 11)}…` : value;
 }
 
 const hoverCursor = {
@@ -108,15 +113,15 @@ export function DashboardCharts({
           {stats.byCategory.length === 0 ? (
             <ChartEmpty message="Add an expense to see the category split." />
           ) : (
-            <div className="h-72">
+            <div className="h-64 sm:h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={stats.byCategory}
                     dataKey="amount"
                     nameKey="name"
-                    innerRadius={52}
-                    outerRadius={80}
+                    innerRadius="45%"
+                    outerRadius="70%"
                     paddingAngle={2}
                   >
                     {stats.byCategory.map((entry) => (
@@ -129,8 +134,10 @@ export function DashboardCharts({
                   />
                   <Legend
                     verticalAlign="bottom"
-                    height={36}
-                    formatter={(value) => <span className="text-xs text-foreground">{value}</span>}
+                    height={48}
+                    formatter={(value) => (
+                      <span className="text-xs text-foreground">{shortenName(String(value))}</span>
+                    )}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -148,19 +155,20 @@ export function DashboardCharts({
           {payers.length === 0 ? (
             <ChartEmpty message="Nobody has paid anything this month yet." />
           ) : (
-            <div className="h-72">
+            <div className="h-64 sm:h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={payers}
                   layout="vertical"
-                  margin={{ left: 8, right: 12, top: 8, bottom: 8 }}
+                  margin={{ left: 4, right: 12, top: 8, bottom: 8 }}
                 >
                   <CartesianGrid horizontal={false} strokeDasharray="3 3" className="stroke-border" />
                   <XAxis type="number" hide />
                   <YAxis
                     type="category"
                     dataKey="fullName"
-                    width={88}
+                    width={76}
+                    tickFormatter={shortenName}
                     tick={{ fontSize: 12 }}
                     className="fill-muted-foreground"
                   />
@@ -189,13 +197,13 @@ export function DashboardCharts({
           {trend.every((row) => row.amount === 0) ? (
             <ChartEmpty message="Trend shows up after a few months of expenses." />
           ) : (
-            <div className="h-72">
+            <div className="h-64 sm:h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={trend} margin={{ left: 4, right: 8, top: 8, bottom: 0 }}>
+                <BarChart data={trend} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
                   <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="label" tick={{ fontSize: 12 }} />
                   <YAxis
-                    width={56}
+                    width={44}
                     tick={{ fontSize: 12 }}
                     tickFormatter={(value: number) =>
                       new Intl.NumberFormat(undefined, {

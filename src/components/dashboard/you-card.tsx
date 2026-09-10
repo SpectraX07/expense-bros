@@ -39,7 +39,7 @@ export function YouCard({
         <CardDescription>You this month</CardDescription>
         <CardTitle
           className={cn(
-            "font-heading text-3xl tabular-nums",
+            "font-heading text-2xl text-balance tabular-nums sm:text-3xl",
             netCents < 0 && "text-destructive",
             netCents > 0 && "text-emerald-600 dark:text-emerald-400",
           )}

@@ -86,7 +86,7 @@ export function CategoryPicker({
           type="button"
           onClick={() => onChange(null)}
           className={cn(
-            "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
+            "inline-flex min-h-9 items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-all",
             value === null
               ? "border-primary/40 bg-primary/15 text-foreground shadow-sm"
               : "border-border/80 bg-card/70 text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -107,7 +107,7 @@ export function CategoryPicker({
               type="button"
               onClick={() => onChange(category.id)}
               className={cn(
-                "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
+                "inline-flex min-h-9 items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-all",
                 selected
                   ? "text-foreground shadow-sm"
                   : "border-border/80 bg-card/70 hover:bg-muted",

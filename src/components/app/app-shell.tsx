@@ -3,20 +3,20 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  HistoryIcon,
-  HomeIcon,
-  LayoutDashboardIcon,
-  LogOutIcon,
-  PlusIcon,
-  RepeatIcon,
-  ScaleIcon,
-  TagsIcon,
-  WalletIcon,
-} from "lucide-react";
+import { LogOutIcon, PlusIcon } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { HouseholdSwitcher } from "@/components/app/household-switcher";
 import { ThemeToggle } from "@/components/app/theme-toggle";
+import { MobileMoreMenu } from "@/components/app/mobile-more-menu";
+import {
+  ADD_EXPENSE_NAV,
+  MANAGE_NAV,
+  MOBILE_TABS_END,
+  MOBILE_TABS_START,
+  PRIMARY_NAV,
+  navIsActive,
+  type NavItem,
+} from "@/components/app/nav-items";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,34 +24,92 @@ import { signOut } from "@/app/actions/auth";
 import type { AuthUser } from "@/lib/auth";
 import type { HouseholdMembership } from "@/lib/households";
 
-const PRIMARY_NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon },
-  { href: "/expenses/new", label: "Add expense", icon: PlusIcon, shortLabel: "Add" },
-  { href: "/history", label: "History", icon: HistoryIcon },
-  { href: "/settlement", label: "Settlement", icon: ScaleIcon, shortLabel: "Settle" },
-  { href: "/household", label: "Household", icon: HomeIcon, shortLabel: "Home" },
-] as const;
-
-const MANAGE_NAV = [
-  { href: "/household/budgets", label: "Budgets", icon: WalletIcon },
-  { href: "/household/recurring", label: "Recurring", icon: RepeatIcon },
-  { href: "/household/categories", label: "Categories", icon: TagsIcon },
-] as const;
-
-function navIsActive(href: string, pathname: string) {
-  if (href === "/household") {
-    return pathname === "/household";
+function NavBadge({ count, className }: { count: number; className?: string }) {
+  if (count <= 0) {
+    return null;
   }
-  return pathname === href || pathname.startsWith(`${href}/`);
+  return (
+    <span
+      className={cn(
+        "absolute flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground ring-2 ring-background",
+        className,
+      )}
+    >
+      {count > 9 ? "9+" : count}
+    </span>
+  );
 }
 
-function sidebarLinkClass(active: boolean, emphasize = false) {
-  if (emphasize) {
-    return "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm hover:bg-sidebar-primary/90";
-  }
-  return active
-    ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
-    : "text-sidebar-foreground/75 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground";
+function SidebarLink({
+  item,
+  active,
+  emphasize,
+  badge,
+}: {
+  item: NavItem;
+  active: boolean;
+  emphasize?: boolean;
+  badge: number;
+}) {
+  const Icon = item.icon;
+
+  return (
+    <Link
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+        emphasize
+          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm hover:bg-sidebar-primary/90"
+          : active
+            ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+            : "text-sidebar-foreground/75 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
+      )}
+    >
+      {active && !emphasize ? (
+        <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-sidebar-primary" />
+      ) : null}
+      <span className="relative">
+        <Icon className="size-4" />
+        <NavBadge count={badge} className="-top-1.5 -right-1.5 ring-sidebar" />
+      </span>
+      {item.label}
+    </Link>
+  );
+}
+
+function BottomTab({
+  item,
+  active,
+  badge,
+}: {
+  item: NavItem;
+  active: boolean;
+  badge: number;
+}) {
+  const Icon = item.icon;
+
+  return (
+    <Link
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex min-h-14 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium transition-colors",
+        active ? "text-primary" : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      <span
+        className={cn(
+          "relative inline-flex size-8 items-center justify-center rounded-xl transition-colors",
+          active && "bg-accent",
+        )}
+      >
+        <Icon className="size-5" />
+        <NavBadge count={badge} className="-top-0.5 -right-0.5" />
+      </span>
+      {item.shortLabel ?? item.label}
+    </Link>
+  );
 }
 
 export function AppShell({
@@ -91,53 +149,27 @@ export function AppShell({
             variant="sidebar"
           />
         </div>
-        <nav className="flex flex-1 flex-col gap-1 px-3">
-          {PRIMARY_NAV.map((item) => {
-            const active = navIsActive(item.href, pathname);
-            const Icon = item.icon;
-            const emphasize = item.href === "/expenses/new";
-            const badge = badges[item.href] ?? 0;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                  sidebarLinkClass(active, emphasize),
-                )}
-              >
-                <span className="relative">
-                  <Icon className="size-4" />
-                  {badge > 0 ? (
-                    <span className="absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
-                      {badge > 9 ? "9+" : badge}
-                    </span>
-                  ) : null}
-                </span>
-                {item.label}
-              </Link>
-            );
-          })}
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3">
+          {PRIMARY_NAV.map((item) => (
+            <SidebarLink
+              key={item.href}
+              item={item}
+              active={navIsActive(item.href, pathname)}
+              emphasize={item.href === ADD_EXPENSE_NAV.href}
+              badge={badges[item.href] ?? 0}
+            />
+          ))}
           <p className="mt-5 px-3 pb-1.5 text-[11px] font-semibold tracking-[0.14em] text-sidebar-foreground/45 uppercase">
             Manage
           </p>
-          {MANAGE_NAV.map((item) => {
-            const active = navIsActive(item.href, pathname);
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                  sidebarLinkClass(active),
-                )}
-              >
-                <Icon className="size-4" />
-                {item.label}
-              </Link>
-            );
-          })}
+          {MANAGE_NAV.map((item) => (
+            <SidebarLink
+              key={item.href}
+              item={item}
+              active={navIsActive(item.href, pathname)}
+              badge={0}
+            />
+          ))}
         </nav>
         <div className="space-y-3 p-3">
           <div className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2.5">
@@ -170,60 +202,58 @@ export function AppShell({
       </aside>
 
       <div className="md:pl-[17.5rem]">
-        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/80 bg-background/80 px-4 py-3 backdrop-blur-md md:hidden">
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/70 bg-background/80 px-4 py-3 backdrop-blur-md md:hidden">
           <Brand size="sm" />
-          <div className="flex items-center gap-1">
-            <ThemeToggle compact />
-            <HouseholdSwitcher
-              memberships={memberships}
-              currentHousehold={currentHousehold}
-            />
-          </div>
+          <HouseholdSwitcher memberships={memberships} currentHousehold={currentHousehold} />
         </header>
 
-        <main className="w-full px-4 pb-28 pt-6 md:px-6 md:pb-12 md:pt-8 xl:px-8">{children}</main>
+        <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-28 md:px-6 md:pt-8 md:pb-12 xl:px-8">
+          {children}
+        </main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border/80 bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden">
-        <ul className="grid grid-cols-5">
-          {PRIMARY_NAV.map((item) => {
-            const active = navIsActive(item.href, pathname);
-            const Icon = item.icon;
-            const label = "shortLabel" in item ? item.shortLabel : item.label;
-            const add = item.href === "/expenses/new";
-            const badge = badges[item.href] ?? 0;
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium",
-                    add
-                      ? "text-primary-foreground"
-                      : active
-                        ? "text-foreground"
-                        : "text-muted-foreground",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "relative inline-flex items-center justify-center rounded-xl",
-                      add && "size-9 bg-primary text-primary-foreground shadow-md shadow-primary/30",
-                      !add && active && "text-primary",
-                    )}
-                  >
-                    <Icon className={cn("size-5", add && "size-5")} />
-                    {badge > 0 ? (
-                      <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
-                        {badge > 9 ? "9+" : badge}
-                      </span>
-                    ) : null}
-                  </span>
-                  <span className={cn(add && "text-foreground")}>{label}</span>
-                </Link>
-              </li>
-            );
-          })}
+      <nav
+        aria-label="Primary"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-border/70 bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg md:hidden"
+      >
+        <ul className="mx-auto grid max-w-md grid-cols-5 items-center px-1">
+          {MOBILE_TABS_START.map((item) => (
+            <li key={item.href}>
+              <BottomTab
+                item={item}
+                active={navIsActive(item.href, pathname)}
+                badge={badges[item.href] ?? 0}
+              />
+            </li>
+          ))}
+
+          <li className="flex min-h-14 items-center justify-center">
+            <Link
+              href={ADD_EXPENSE_NAV.href}
+              aria-label={ADD_EXPENSE_NAV.label}
+              className="inline-flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md shadow-primary/30 transition-transform active:scale-95"
+            >
+              <PlusIcon className="size-6" />
+            </Link>
+          </li>
+
+          {MOBILE_TABS_END.map((item) => (
+            <li key={item.href}>
+              <BottomTab
+                item={item}
+                active={navIsActive(item.href, pathname)}
+                badge={badges[item.href] ?? 0}
+              />
+            </li>
+          ))}
+
+          <li>
+            <MobileMoreMenu
+              user={user}
+              displayName={displayName}
+              householdName={currentHousehold.name}
+            />
+          </li>
         </ul>
       </nav>
     </div>

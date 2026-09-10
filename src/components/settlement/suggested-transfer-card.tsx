@@ -59,7 +59,7 @@ export function SuggestedTransferCard({
             {personLabel(row.fromName, row.fromUserId, currentUserId)} pays{" "}
             {personLabel(row.toName, row.toUserId, currentUserId)}
           </p>
-          <p className="text-sm tabular-nums text-muted-foreground">
+          <p className="text-lg font-semibold tabular-nums">
             {formatMoney(row.amount, currency)}
           </p>
           {handle ? (

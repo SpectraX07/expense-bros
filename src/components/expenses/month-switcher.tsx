@@ -39,7 +39,9 @@ export function MonthSwitcher({
       >
         <ChevronLeftIcon />
       </Link>
-      <p className="min-w-36 text-center text-sm font-medium">{label}</p>
+      <p className="min-w-28 flex-1 text-center text-sm font-medium sm:min-w-36 sm:flex-none">
+        {label}
+      </p>
       <Link
         href={href(next)}
         className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }))}

@@ -326,12 +326,12 @@ export function ExpenseForm({
         void onSubmit();
       }}
     >
-      <div className="rounded-2xl bg-muted/45 px-4 py-6 text-center sm:px-6">
+      <div className="overflow-hidden rounded-2xl bg-muted/45 px-3 py-6 text-center sm:px-6">
         <Label htmlFor="amount" className="text-muted-foreground">
           Amount
         </Label>
-        <div className="mt-2 flex w-fit max-w-full items-baseline justify-center gap-0.5 mx-auto">
-          <span className="font-heading text-5xl font-semibold leading-none text-muted-foreground sm:text-6xl">
+        <div className="mx-auto mt-2 flex max-w-full items-baseline justify-center gap-0.5 overflow-hidden">
+          <span className="shrink-0 font-heading text-4xl font-semibold leading-none text-muted-foreground sm:text-6xl">
             {symbol}
           </span>
           <input
@@ -348,8 +348,8 @@ export function ExpenseForm({
             placeholder="0"
             required
             aria-label="Amount"
-            style={{ width: `${Math.max((amount || "0").length, 1)}ch` }}
-            className="min-w-[1ch] bg-transparent font-heading text-5xl font-semibold leading-none tabular-nums outline-none placeholder:text-muted-foreground/40 sm:text-6xl"
+            style={{ width: `${Math.min(Math.max((amount || "0").length, 1), 10)}ch` }}
+            className="min-w-[1ch] max-w-[min(10ch,calc(100%-2.5rem))] bg-transparent font-heading text-4xl font-semibold leading-none tabular-nums outline-none placeholder:text-muted-foreground/40 sm:max-w-[12ch] sm:text-6xl"
           />
         </div>
       </div>

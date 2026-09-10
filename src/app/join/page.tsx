@@ -9,6 +9,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { JoinHouseholdForm } from "@/components/household/join-household-form";
 import { Brand } from "@/components/brand";
+import { ThemeToggle } from "@/components/app/theme-toggle";
 import { getAuthUser } from "@/lib/auth";
 import { formatInviteCode } from "@/lib/households";
 import { cn } from "@/lib/utils";
@@ -23,7 +24,10 @@ export default async function JoinPage({
   const user = await getAuthUser();
 
   return (
-    <main className="flex min-h-full flex-col items-center justify-center px-4 py-10">
+    <main className="relative flex min-h-full flex-col items-center justify-center px-4 py-10">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle compact />
+      </div>
       <div className="w-full max-w-md space-y-6">
         <div className="flex justify-center">
           <Brand />

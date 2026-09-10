@@ -98,7 +98,7 @@ export default async function SettlementPage({
           <CardDescription>Your position</CardDescription>
           <CardTitle
             className={cn(
-              "font-heading text-3xl tabular-nums",
+              "font-heading text-2xl text-balance tabular-nums sm:text-3xl",
               netCents < 0 ? "text-destructive" : null,
               netCents > 0 ? "text-emerald-600 dark:text-emerald-400" : null,
             )}
@@ -170,37 +170,42 @@ export default async function SettlementPage({
           <div className="space-y-2 md:hidden">
             {balances.map((row) => (
               <div key={row.userId} className="rounded-xl border border-border px-3 py-3">
-                <p className="font-medium">
-                  {personLabel(row.fullName, row.userId, user.id)}
-                  {row.isActive ? null : (
-                    <Badge variant="secondary" className="ml-2">
-                      Former
-                    </Badge>
-                  )}
-                </p>
-                <dl className="mt-2 grid grid-cols-3 gap-2 text-sm">
-                  <div>
-                    <dt className="text-muted-foreground">Paid</dt>
-                    <dd className="tabular-nums">{formatMoney(row.paid, household.currency)}</dd>
+                <div className="flex items-start justify-between gap-3">
+                  <p className="min-w-0 flex-1 font-medium">
+                    <span className="block truncate">
+                      {personLabel(row.fullName, row.userId, user.id)}
+                    </span>
+                    {row.isActive ? null : (
+                      <Badge variant="secondary" className="mt-1">
+                        Former
+                      </Badge>
+                    )}
+                  </p>
+                  <p
+                    className={cn(
+                      "shrink-0 text-right font-semibold tabular-nums",
+                      moneyToCents(row.net) > 0
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : moneyToCents(row.net) < 0
+                          ? "text-destructive"
+                          : "text-muted-foreground",
+                    )}
+                  >
+                    {moneyToCents(row.net) > 0 ? "+" : ""}
+                    {formatMoney(row.net, household.currency)}
+                  </p>
+                </div>
+                <dl className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  <div className="flex gap-1.5">
+                    <dt>Paid</dt>
+                    <dd className="font-medium tabular-nums text-foreground">
+                      {formatMoney(row.paid, household.currency)}
+                    </dd>
                   </div>
-                  <div>
-                    <dt className="text-muted-foreground">Share</dt>
-                    <dd className="tabular-nums">{formatMoney(row.fairShare, household.currency)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted-foreground">Net</dt>
-                    <dd
-                      className={cn(
-                        "font-medium tabular-nums",
-                        moneyToCents(row.net) > 0
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : moneyToCents(row.net) < 0
-                            ? "text-destructive"
-                            : "text-muted-foreground",
-                      )}
-                    >
-                      {moneyToCents(row.net) > 0 ? "+" : ""}
-                      {formatMoney(row.net, household.currency)}
+                  <div className="flex gap-1.5">
+                    <dt>Share</dt>
+                    <dd className="font-medium tabular-nums text-foreground">
+                      {formatMoney(row.fairShare, household.currency)}
                     </dd>
                   </div>
                 </dl>

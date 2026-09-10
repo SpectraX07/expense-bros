@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
+import { ReceiptTextIcon } from "lucide-react";
 import { getAppContext, parsePeriod } from "@/lib/app-context";
 import { listCategories } from "@/lib/expenses";
 import { getDashboardStats } from "@/lib/dashboard";
@@ -126,7 +127,7 @@ export default async function DashboardPage({
         <Card className="overflow-hidden">
           <CardHeader>
             <CardDescription>Total spent</CardDescription>
-            <CardTitle className="font-heading text-3xl tabular-nums">
+            <CardTitle className="font-heading text-2xl break-all tabular-nums sm:text-3xl">
               {formatMoney(stats.totalSpent, household.currency)}
             </CardTitle>
           </CardHeader>
@@ -142,15 +143,17 @@ export default async function DashboardPage({
         <Card>
           <CardHeader className="gap-2">
             <div className="flex items-start justify-between gap-3">
-              <div>
+              <div className="min-w-0">
                 <CardDescription>Budget vs actual</CardDescription>
-                <CardTitle className="font-heading text-3xl tabular-nums">
+                <CardTitle className="font-heading text-2xl break-all tabular-nums sm:text-3xl">
                   {stats.overallBudget === null
                     ? "—"
                     : formatMoney(stats.overallBudget, household.currency)}
                 </CardTitle>
               </div>
-              <Badge variant={STATUS_BADGE[status.tone]}>{status.label}</Badge>
+              <Badge variant={STATUS_BADGE[status.tone]} className="shrink-0">
+                {status.label}
+              </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -225,11 +228,11 @@ export default async function DashboardPage({
                   >
                     <div className="min-w-0">
                       <p className="truncate font-medium">{expense.itemName}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="truncate text-sm text-muted-foreground">
                         {format(parseISO(expense.expenseDate), "d MMM")} · {expense.paidByName}
                       </p>
                     </div>
-                    <p className="text-sm font-medium tabular-nums">
+                    <p className="shrink-0 text-sm font-medium tabular-nums">
                       {formatMoney(expense.amount, household.currency)}
                     </p>
                   </li>
@@ -242,6 +245,7 @@ export default async function DashboardPage({
 
       {stats.expenseCount === 0 ? (
         <EmptyState
+          icon={ReceiptTextIcon}
           title="Nothing spent this month yet"
           description="Log the first expense without leaving this page, or open the full form."
         >

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
+import { RepeatIcon } from "lucide-react";
 import { getAppContext } from "@/lib/app-context";
 import { listRecurringExpenses } from "@/lib/recurring";
 import { formatMoney } from "@/lib/money";
@@ -27,6 +28,7 @@ export default async function RecurringPage() {
 
       {templates.length === 0 ? (
         <EmptyState
+          icon={RepeatIcon}
           title="No recurring expenses yet"
           description="Add rent, Wi-Fi, or any bill that repeats so you are not retyping it every month."
         >
@@ -43,9 +45,9 @@ export default async function RecurringPage() {
                 key={item.id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/80 bg-card/80 px-4 py-3 shadow-sm"
               >
-                <div className="min-w-0">
-                  <p className="font-medium">{item.itemName}</p>
-                  <p className="text-sm text-muted-foreground">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{item.itemName}</p>
+                  <p className="text-sm text-pretty text-muted-foreground">
                     {formatMoney(item.amount, household.currency)} · {item.frequency} · next{" "}
                     {format(parseISO(item.nextRunDate), "d MMM yyyy")}
                     {item.category ? ` · ${item.category.name}` : ""}

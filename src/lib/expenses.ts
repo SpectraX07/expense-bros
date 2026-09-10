@@ -103,13 +103,29 @@ export async function listCategories(householdId: string, options?: { includeArc
   };
 }
 
+/**
+ * PostgREST parses `or=(...)` itself, so commas and parentheses in a search
+ * term would change the filter. Wildcards are stripped so a typed `%` matches
+ * literally rather than everything.
+ */
+function searchTerm(value: string) {
+  return value.replace(/[,()\\%_"']/g, "").trim();
+}
+
+export const EXPENSE_LIST_LIMIT = 500;
+
 export async function listExpenses(options: {
   householdId: string;
-  year: number;
-  month: number;
+  year?: number;
+  month?: number;
+  /** Inclusive ISO dates. Take precedence over year/month when set. */
+  from?: string | null;
+  to?: string | null;
   categoryId?: string;
   paidBy?: string;
   query?: string;
+  uncategorised?: boolean;
+  limit?: number;
 }) {
   const supabase = await createClient();
   let request = supabase
@@ -118,19 +134,35 @@ export async function listExpenses(options: {
       "id, item_name, amount, expense_date, split_type, note, paid_by, created_by, created_at, updated_at, edited_by, categories(id, name, icon, color, household_id, is_archived), payer:profiles!expenses_paid_by_fkey(id, full_name), editor:profiles!expenses_edited_by_fkey(full_name), expense_splits(user_id, share_amount, is_included)",
     )
     .eq("household_id", options.householdId)
-    .eq("year", options.year)
-    .eq("month", options.month)
     .order("expense_date", { ascending: false })
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(options.limit ?? EXPENSE_LIST_LIMIT);
+
+  const hasRange = Boolean(options.from || options.to);
+  if (hasRange) {
+    if (options.from) {
+      request = request.gte("expense_date", options.from);
+    }
+    if (options.to) {
+      request = request.lte("expense_date", options.to);
+    }
+  } else if (options.year !== undefined && options.month !== undefined) {
+    request = request.eq("year", options.year).eq("month", options.month);
+  }
 
   if (options.categoryId) {
     request = request.eq("category_id", options.categoryId);
   }
+  if (options.uncategorised) {
+    request = request.is("category_id", null);
+  }
   if (options.paidBy) {
     request = request.eq("paid_by", options.paidBy);
   }
-  if (options.query) {
-    request = request.ilike("item_name", `%${options.query}%`);
+
+  const term = options.query ? searchTerm(options.query) : "";
+  if (term) {
+    request = request.or(`item_name.ilike.%${term}%,note.ilike.%${term}%`);
   }
 
   const { data, error } = await request;

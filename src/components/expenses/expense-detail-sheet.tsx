@@ -61,12 +61,17 @@ export function ExpenseDetailSheet({
                 key={split.userId}
                 className="flex items-center justify-between gap-3 text-sm"
               >
-                <span className={!split.isIncluded ? "text-muted-foreground line-through" : undefined}>
+                <span
+                  className={cn(
+                    "min-w-0 flex-1 truncate",
+                    !split.isIncluded && "text-muted-foreground line-through",
+                  )}
+                >
                   {nameMap.get(split.userId) ?? "Roommate"}
                   {split.userId === currentUserId ? " (you)" : ""}
                   {!split.isIncluded ? " · not included" : ""}
                 </span>
-                <span className="tabular-nums">
+                <span className="shrink-0 tabular-nums">
                   {formatMoney(split.shareAmount, currency)}
                 </span>
               </li>
